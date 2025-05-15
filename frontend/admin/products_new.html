@@ -348,30 +348,12 @@ il faut maintenant que les nouvelle page product et category soient relier au bo
     // Charger les produits
     async function loadProducts() {
       try {
-        // Récupérer les produits depuis le localStorage et l'API
+        // Récupérer les produits depuis le localStorage
         const localProducts = JSON.parse(localStorage.getItem('products')) || [];
         console.log("Produits locaux chargés:", localProducts);
         
-        // Essayer de récupérer les produits depuis l'API
-        try {
-          const API_URL = window.location.hostname === 'localhost' 
-            ? 'http://localhost:5000/api' 
-            : '/api';
-          
-          const response = await fetch(`${API_URL}/products`);
-          if (response.ok) {
-            const apiProducts = await response.json();
-            console.log("Produits API chargés:", apiProducts);
-            
-            // Fusionner les produits locaux et API
-            products = mergeProducts(localProducts, apiProducts);
-          } else {
-            products = localProducts;
-          }
-        } catch (apiError) {
-          console.warn("Impossible de charger les produits depuis l'API, utilisation des données locales:", apiError);
-          products = localProducts;
-        }
+        // Utiliser les produits locaux comme base
+        products = [...localProducts];
         
         // Si aucun produit n'existe, créer des exemples
         if (products.length === 0) {
@@ -416,11 +398,29 @@ il faut maintenant que les nouvelle page product et category soient relier au bo
           
           // Ajouter les produits par défaut
           products = defaultProducts;
+          
+          // Enregistrer dans le localStorage
+          localStorage.setItem('products', JSON.stringify(products));
+          console.log("Produits d'exemple créés et enregistrés");
         }
         
-        // Enregistrer dans le localStorage
-        localStorage.setItem('products', JSON.stringify(products));
-        console.log("Produits enregistrés dans localStorage");
+        // Essayer de récupérer les produits depuis l'API (pour une future intégration)
+        try {
+          const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:5000/api' 
+            : '/api';
+          
+          const response = await fetch(`${API_URL}/products`);
+          if (response.ok) {
+            const apiProducts = await response.json();
+            console.log("Produits API chargés:", apiProducts);
+            
+            // Dans une implémentation future, on pourrait fusionner les données
+            // Pour l'instant, on garde les données locales comme source de vérité
+          }
+        } catch (apiError) {
+          console.warn("Impossible de charger les produits depuis l'API:", apiError);
+        }
         
         // Appliquer les filtres et le tri
         filterAndSortProducts();

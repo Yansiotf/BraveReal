@@ -186,30 +186,12 @@
     // Charger les catégories
     async function loadCategories() {
       try {
-        // Récupérer les catégories depuis le localStorage et l'API
+        // Récupérer les catégories depuis le localStorage
         const localCategories = JSON.parse(localStorage.getItem('categories')) || [];
         console.log("Catégories locales chargées:", localCategories);
         
-        // Essayer de récupérer les catégories depuis l'API
-        try {
-          const API_URL = window.location.hostname === 'localhost' 
-            ? 'http://localhost:5000/api' 
-            : '/api';
-          
-          const response = await fetch(`${API_URL}/categories`);
-          if (response.ok) {
-            const apiCategories = await response.json();
-            console.log("Catégories API chargées:", apiCategories);
-            
-            // Fusionner les catégories locales et API
-            categories = mergeCategories(localCategories, apiCategories);
-          } else {
-            categories = localCategories;
-          }
-        } catch (apiError) {
-          console.warn("Impossible de charger les catégories depuis l'API, utilisation des données locales:", apiError);
-          categories = localCategories;
-        }
+        // Utiliser les catégories locales comme base
+        categories = [...localCategories];
         
         // Si aucune catégorie n'existe, créer des exemples
         if (categories.length === 0) {
@@ -245,17 +227,35 @@
           
           // Ajouter les catégories par défaut
           categories = defaultCategories;
+          
+          // Enregistrer dans le localStorage
+          localStorage.setItem('categories', JSON.stringify(categories));
+          console.log("Catégories d'exemple créées et enregistrées");
         }
         
-        // Enregistrer dans le localStorage
-        localStorage.setItem('categories', JSON.stringify(categories));
-        console.log("Catégories enregistrées dans localStorage");
+        // Essayer de récupérer les catégories depuis l'API (pour une future intégration)
+        try {
+          const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:5000/api' 
+            : '/api';
+          
+          const response = await fetch(`${API_URL}/categories`);
+          if (response.ok) {
+            const apiCategories = await response.json();
+            console.log("Catégories API chargées:", apiCategories);
+            
+            // Dans une implémentation future, on pourrait fusionner les données
+            // Pour l'instant, on garde les données locales comme source de vérité
+          }
+        } catch (apiError) {
+          console.warn("Impossible de charger les catégories depuis l'API:", apiError);
+        }
         
         // Afficher les catégories
         displayCategories(categories);
       } catch (error) {
         console.error('Erreur lors du chargement des catégories:', error);
-        alert('Erreur lors du chargement des catégories');
+        app.showAlert('Erreur lors du chargement des catégories', 'error');
       }
     }
     

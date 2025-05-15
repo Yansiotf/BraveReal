@@ -221,31 +221,63 @@ app.loadFeaturedProducts = async function() {
     // Afficher un loader pendant le chargement
     featuredProductsContainer.innerHTML = '<div class="col-span-full flex justify-center"><div class="loader"></div></div>';
     
-    // Essayer d'abord de récupérer les produits depuis le localStorage
-    let products = [];
+    // Récupérer les produits depuis le localStorage
     const localProducts = JSON.parse(localStorage.getItem('products')) || [];
+    console.log("Produits chargés depuis localStorage pour les produits en vedette:", localProducts);
     
-    if (localProducts.length > 0) {
-      console.log("Utilisation des produits du localStorage pour les produits en vedette");
-      products = localProducts;
-    } else {
-      // Si pas de produits dans le localStorage, essayer l'API
-      console.log("Aucun produit dans le localStorage, tentative de récupération depuis l'API");
-      try {
-        const response = await fetch(`${API_URL}/products`);
-        
-        if (!response.ok) {
-          throw new Error('Erreur lors de la récupération des produits');
+    // Utiliser les produits locaux
+    let products = [...localProducts];
+    
+    // Si aucun produit n'existe, créer des exemples
+    if (products.length === 0) {
+      console.log("Aucun produit trouvé, création d'exemples...");
+      
+      // Récupérer les catégories
+      const categories = JSON.parse(localStorage.getItem('categories')) || [];
+      
+      // Créer des produits par défaut
+      const defaultProducts = [
+        {
+          _id: 'product_instagram_followers',
+          name: '1000 Followers Instagram',
+          categoryId: categories.find(c => c.name === 'Instagram')?._id || '',
+          description: 'Augmentez votre audience avec 1000 followers Instagram de qualité.',
+          price: 9.99,
+          stock: 999,
+          status: 'active',
+          image: 'https://images.unsplash.com/photo-1611162618071-b39a2ec055fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+          createdAt: new Date().toISOString()
+        },
+        {
+          _id: 'product_tiktok_likes',
+          name: '5000 Likes TikTok',
+          categoryId: categories.find(c => c.name === 'TikTok')?._id || '',
+          description: 'Boostez l\'engagement de vos vidéos avec 5000 likes TikTok.',
+          price: 14.99,
+          stock: 999,
+          status: 'active',
+          image: 'https://images.unsplash.com/photo-1596560548464-f010549e45d8?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+          createdAt: new Date().toISOString()
+        },
+        {
+          _id: 'product_youtube_views',
+          name: '10000 Vues YouTube',
+          categoryId: categories.find(c => c.name === 'YouTube')?._id || '',
+          description: 'Augmentez la visibilité de vos vidéos avec 10000 vues YouTube.',
+          price: 19.99,
+          stock: 999,
+          status: 'active',
+          image: 'https://images.unsplash.com/photo-1611162616475-46b635cb6868?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+          createdAt: new Date().toISOString()
         }
-        
-        products = await response.json();
-        
-        // Sauvegarder les produits dans le localStorage pour une utilisation future
-        localStorage.setItem('products', JSON.stringify(products));
-      } catch (apiError) {
-        console.error("Erreur lors de la récupération des produits depuis l'API:", apiError);
-        products = [];
-      }
+      ];
+      
+      // Ajouter les produits par défaut
+      products = defaultProducts;
+      
+      // Enregistrer dans le localStorage
+      localStorage.setItem('products', JSON.stringify(products));
+      console.log("Produits d'exemple créés et enregistrés");
     }
     
     // Afficher les 4 premiers produits
@@ -307,26 +339,51 @@ app.loadCategories = async function() {
   if (!categoriesContainer) return;
   
   try {
-    // Essayer d'abord de récupérer les catégories depuis le localStorage
-    let categories = [];
+    // Récupérer les catégories depuis le localStorage
     const localCategories = JSON.parse(localStorage.getItem('categories')) || [];
+    console.log("Catégories chargées depuis localStorage:", localCategories);
     
-    if (localCategories.length > 0) {
-      console.log("Utilisation des catégories du localStorage");
-      categories = localCategories;
-    } else {
-      // Si pas de catégories dans le localStorage, essayer l'API
-      console.log("Aucune catégorie dans le localStorage, tentative de récupération depuis l'API");
-      try {
-        const response = await fetch(`${API_URL}/categories`);
-        categories = await response.json();
-        
-        // Sauvegarder les catégories dans le localStorage pour une utilisation future
-        localStorage.setItem('categories', JSON.stringify(categories));
-      } catch (apiError) {
-        console.error("Erreur lors de la récupération des catégories depuis l'API:", apiError);
-        categories = [];
-      }
+    // Utiliser les catégories locales
+    let categories = [...localCategories];
+    
+    // Si aucune catégorie n'existe, créer des exemples
+    if (categories.length === 0) {
+      console.log("Aucune catégorie trouvée, création d'exemples...");
+      
+      // Créer des catégories par défaut
+      const defaultCategories = [
+        {
+          _id: 'category_instagram',
+          name: 'Instagram',
+          description: 'Followers, likes, vues et commentaires pour Instagram',
+          icon: 'fab fa-instagram',
+          image: 'https://images.unsplash.com/photo-1611162616475-46b635cb6868?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+          createdAt: new Date().toISOString()
+        },
+        {
+          _id: 'category_tiktok',
+          name: 'TikTok',
+          description: 'Followers, likes et vues pour TikTok',
+          icon: 'fab fa-tiktok',
+          image: 'https://images.unsplash.com/photo-1596560548464-f010549e45d8?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+          createdAt: new Date().toISOString()
+        },
+        {
+          _id: 'category_youtube',
+          name: 'YouTube',
+          description: 'Abonnés, vues et likes pour YouTube',
+          icon: 'fab fa-youtube',
+          image: 'https://images.unsplash.com/photo-1611162618071-b39a2ec055fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+          createdAt: new Date().toISOString()
+        }
+      ];
+      
+      // Ajouter les catégories par défaut
+      categories = defaultCategories;
+      
+      // Enregistrer dans le localStorage
+      localStorage.setItem('categories', JSON.stringify(categories));
+      console.log("Catégories d'exemple créées et enregistrées");
     }
     
     categoriesContainer.innerHTML = '';
@@ -383,26 +440,63 @@ app.loadProducts = async function(categoryId = '') {
   productsContainer.innerHTML = '<div class="loader col-span-full mx-auto"></div>';
   
   try {
-    // Essayer d'abord de récupérer les produits depuis le localStorage
-    let allProducts = [];
+    // Récupérer les produits depuis le localStorage
     const localProducts = JSON.parse(localStorage.getItem('products')) || [];
+    console.log("Produits chargés depuis localStorage:", localProducts);
     
-    if (localProducts.length > 0) {
-      console.log("Utilisation des produits du localStorage");
-      allProducts = localProducts;
-    } else {
-      // Si pas de produits dans le localStorage, essayer l'API
-      console.log("Aucun produit dans le localStorage, tentative de récupération depuis l'API");
-      try {
-        const response = await fetch(`${API_URL}/products`);
-        allProducts = await response.json();
-        
-        // Sauvegarder les produits dans le localStorage pour une utilisation future
-        localStorage.setItem('products', JSON.stringify(allProducts));
-      } catch (apiError) {
-        console.error("Erreur lors de la récupération des produits depuis l'API:", apiError);
-        allProducts = [];
-      }
+    // Utiliser les produits locaux
+    let allProducts = [...localProducts];
+    
+    // Si aucun produit n'existe, créer des exemples
+    if (allProducts.length === 0) {
+      console.log("Aucun produit trouvé, création d'exemples...");
+      
+      // Récupérer les catégories
+      const categories = JSON.parse(localStorage.getItem('categories')) || [];
+      
+      // Créer des produits par défaut
+      const defaultProducts = [
+        {
+          _id: 'product_instagram_followers',
+          name: '1000 Followers Instagram',
+          categoryId: categories.find(c => c.name === 'Instagram')?._id || '',
+          description: 'Augmentez votre audience avec 1000 followers Instagram de qualité.',
+          price: 9.99,
+          stock: 999,
+          status: 'active',
+          image: 'https://images.unsplash.com/photo-1611162618071-b39a2ec055fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+          createdAt: new Date().toISOString()
+        },
+        {
+          _id: 'product_tiktok_likes',
+          name: '5000 Likes TikTok',
+          categoryId: categories.find(c => c.name === 'TikTok')?._id || '',
+          description: 'Boostez l\'engagement de vos vidéos avec 5000 likes TikTok.',
+          price: 14.99,
+          stock: 999,
+          status: 'active',
+          image: 'https://images.unsplash.com/photo-1596560548464-f010549e45d8?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+          createdAt: new Date().toISOString()
+        },
+        {
+          _id: 'product_youtube_views',
+          name: '10000 Vues YouTube',
+          categoryId: categories.find(c => c.name === 'YouTube')?._id || '',
+          description: 'Augmentez la visibilité de vos vidéos avec 10000 vues YouTube.',
+          price: 19.99,
+          stock: 999,
+          status: 'active',
+          image: 'https://images.unsplash.com/photo-1611162616475-46b635cb6868?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+          createdAt: new Date().toISOString()
+        }
+      ];
+      
+      // Ajouter les produits par défaut
+      allProducts = defaultProducts;
+      
+      // Enregistrer dans le localStorage
+      localStorage.setItem('products', JSON.stringify(allProducts));
+      console.log("Produits d'exemple créés et enregistrés");
     }
     
     // Filtrer les produits par catégorie si nécessaire
