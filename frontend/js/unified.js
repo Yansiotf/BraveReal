@@ -19,6 +19,12 @@ auth.isLoggedIn = function() {
 // Fonction pour vérifier si l'utilisateur est admin
 auth.isAdmin = function() {
   const userInfo = auth.getUserInfo();
+  
+  // Pour la démo, nous considérons que l'utilisateur avec l'email admin@example.com est admin
+  if (userInfo && userInfo.email === 'admin@example.com') {
+    return true;
+  }
+  
   return userInfo && userInfo.isAdmin;
 };
 
@@ -535,7 +541,7 @@ app.removeCartItem = function(id) {
 };
 
 // Fonction pour passer une commande
-app.placeOrder = async function(socialMediaUsername) {
+app.placeOrder = async function(socialMediaUsername, paymentInfo = null) {
   if (!auth.isLoggedIn()) {
     app.showAlert('Veuillez vous connecter pour passer une commande', 'error');
     window.location.href = 'login.html';
@@ -555,15 +561,15 @@ app.placeOrder = async function(socialMediaUsername) {
   }
   
   try {
-    // Afficher un loader
-    const checkoutButton = document.getElementById('checkout-button');
-    if (checkoutButton) {
-      checkoutButton.disabled = true;
-      checkoutButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Traitement...';
+    // Afficher un loader si le modal de traitement n'est pas déjà affiché
+    const processingModal = document.getElementById('payment-processing-modal');
+    if (!processingModal || processingModal.classList.contains('hidden')) {
+      const checkoutButton = document.getElementById('checkout-button');
+      if (checkoutButton) {
+        checkoutButton.disabled = true;
+        checkoutButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Traitement...';
+      }
     }
-    
-    // Simuler un délai de traitement
-    await new Promise(resolve => setTimeout(resolve, 1500));
     
     // Créer un ID de commande unique
     const orderId = 'ORD' + Date.now();
@@ -571,35 +577,68 @@ app.placeOrder = async function(socialMediaUsername) {
     // Calculer le total
     const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
     
+    // Vérifier si le paiement a été effectué
+    const isPaid = paymentInfo !== null;
+    
     // Créer l'objet commande
     const order = {
       _id: orderId,
       user: auth.getUserInfo()._id,
+      userName: auth.getUserInfo().name,
+      userEmail: auth.getUserInfo().email,
       orderItems: cart.map(item => ({
         ...item,
         product: item._id
       })),
       socialMediaUsername,
       totalPrice: total,
-      isPaid: true,
-      paidAt: new Date().toISOString(),
+      isPaid: isPaid,
+      paidAt: isPaid ? new Date().toISOString() : null,
+      paymentInfo: paymentInfo,
       status: 'En attente',
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
+    
+    // Simuler un délai de traitement
+    await new Promise(resolve => setTimeout(resolve, 1500));
     
     // Stocker la commande dans le localStorage pour la démo
     const orders = JSON.parse(localStorage.getItem('orders')) || [];
     orders.push(order);
     localStorage.setItem('orders', JSON.stringify(orders));
     
+    // Stocker également la commande dans les commandes admin
+    const adminOrders = JSON.parse(localStorage.getItem('adminOrders')) || [];
+    adminOrders.push(order);
+    localStorage.setItem('adminOrders', JSON.stringify(adminOrders));
+    
     // Vider le panier
     localStorage.removeItem('cartItems');
+    
+    // Masquer le modal de traitement s'il est affiché
+    if (processingModal) {
+      processingModal.classList.add('hidden');
+    }
     
     // Rediriger vers la page de confirmation
     window.location.href = `order-confirmation.html?id=${orderId}`;
   } catch (error) {
     console.error('Erreur lors de la commande:', error);
     app.showAlert(error.message || 'Erreur lors de la commande', 'error');
+    
+    // Masquer le modal de traitement s'il est affiché
+    const processingModal = document.getElementById('payment-processing-modal');
+    if (processingModal) {
+      processingModal.classList.add('hidden');
+    }
+    
+    // Réactiver le bouton de paiement
+    const checkoutButton = document.getElementById('checkout-button');
+    if (checkoutButton) {
+      checkoutButton.disabled = false;
+      checkoutButton.innerHTML = 'Passer la commande <i class="fas fa-arrow-right ml-2"></i>';
+    }
   }
 };
 

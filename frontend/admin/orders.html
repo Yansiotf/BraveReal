@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion des commandes - BraveSMM Admin</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="../css/styles.css">
+  <style>
+    .status-badge {
+      @apply px-2 py-1 rounded-full text-xs font-medium;
+    }
+    .status-pending {
+      @apply bg-yellow-100 text-yellow-800;
+    }
+    .status-processing {
+      @apply bg-blue-100 text-blue-800;
+    }
+    .status-completed {
+      @apply bg-green-100 text-green-800;
+    }
+    .status-cancelled {
+      @apply bg-red-100 text-red-800;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+  <!-- Header/Navigation -->
+  <header class="bg-white shadow-md">
+    <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
+      <a href="../index.html" class="text-2xl font-bold text-blue-600">BraveSMM</a>
+      
+      <div class="hidden md:flex space-x-6">
+        <a href="dashboard.html" class="text-gray-700 hover:text-blue-600">Tableau de bord</a>
+        <a href="orders.html" class="text-blue-600 border-b-2 border-blue-600">Commandes</a>
+        <a href="products.html" class="text-gray-700 hover:text-blue-600">Produits</a>
+        <a href="categories.html" class="text-gray-700 hover:text-blue-600">Catégories</a>
+      </div>
+      
+      <div class="flex items-center space-x-4">
+        <a href="../cart.html" class="text-gray-700 hover:text-blue-600 relative">
+          <i class="fas fa-shopping-cart"></i>
+          <span id="cart-count" class="absolute -top-2 -right-2 bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">0</span>
+        </a>
+        
+        <div id="user-menu" class="relative">
+          <button id="user-menu-button" class="text-gray-700 hover:text-blue-600">
+            <i class="fas fa-user"></i>
+          </button>
+          <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+            <div id="logged-out-menu">
+              <a href="../login.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Connexion</a>
+              <a href="../register.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Inscription</a>
+            </div>
+            <div id="logged-in-menu" class="hidden">
+              <a href="../profile.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 font-medium">Mon profil</a>
+              <a href="../orders.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Mes commandes</a>
+              <a href="#" id="logout-button" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Déconnexion</a>
+            </div>
+            <div id="admin-menu" class="hidden border-t border-gray-200">
+              <a href="dashboard.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Administration</a>
+            </div>
+          </div>
+        </div>
+        
+        <button id="mobile-menu-button" class="md:hidden text-gray-700">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+    </nav>
+    
+    <div id="mobile-menu" class="hidden md:hidden px-4 py-2 bg-gray-50">
+      <a href="dashboard.html" class="block py-2 text-gray-700">Tableau de bord</a>
+      <a href="orders.html" class="block py-2 text-blue-600 font-medium">Commandes</a>
+      <a href="products.html" class="block py-2 text-gray-700">Produits</a>
+      <a href="categories.html" class="block py-2 text-gray-700">Catégories</a>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container mx-auto px-4 py-8 flex-grow">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold">Gestion des commandes</h1>
+      
+      <div class="flex space-x-2">
+        <div class="relative">
+          <input type="text" id="order-search" class="form-input pr-10" placeholder="Rechercher une commande...">
+          <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
+        </div>
+        
+        <select id="status-filter" class="form-select">
+          <option value="">Tous les statuts</option>
+          <option value="En attente">En attente</option>
+          <option value="En cours">En cours</option>
+          <option value="Terminée">Terminée</option>
+          <option value="Annulée">Annulée</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paiement</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="orders-table-body" class="bg-white divide-y divide-gray-200">
+            <tr>
+              <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                <div class="flex justify-center items-center">
+                  <div class="loader"></div>
+                  <span class="ml-2">Chargement des commandes...</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div id="pagination" class="px-6 py-3 flex items-center justify-between border-t border-gray-200">
+        <div class="flex-1 flex justify-between sm:hidden">
+          <button id="prev-page-mobile" class="btn-secondary">Précédent</button>
+          <button id="next-page-mobile" class="btn-secondary">Suivant</button>
+        </div>
+        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+          <div>
+            <p class="text-sm text-gray-700">
+              Affichage de <span id="start-item">1</span> à <span id="end-item">10</span> sur <span id="total-items">0</span> commandes
+            </p>
+          </div>
+          <div>
+            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+              <button id="prev-page" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                <span class="sr-only">Précédent</span>
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <div id="page-numbers" class="flex">
+                <!-- Page numbers will be inserted here -->
+              </div>
+              <button id="next-page" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                <span class="sr-only">Suivant</span>
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <!-- Order Details Modal -->
+  <div id="order-details-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg p-6 w-full max-w-4xl max-h-90vh overflow-y-auto">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-2xl font-bold">Détails de la commande <span id="modal-order-id"></span></h2>
+        <button id="close-modal" class="text-gray-500 hover:text-gray-700">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+      
+      <div id="modal-content">
+        <div class="animate-pulse">
+          <div class="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div class="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+          <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+          
+          <div class="h-6 bg-gray-200 rounded w-1/4 mb-4 mt-6"></div>
+          <div class="h-20 bg-gray-200 rounded mb-4"></div>
+          
+          <div class="h-6 bg-gray-200 rounded w-1/4 mb-4 mt-6"></div>
+          <div class="h-32 bg-gray-200 rounded mb-4"></div>
+        </div>
+      </div>
+      
+      <div class="mt-6 flex justify-end space-x-2">
+        <button id="cancel-order" class="btn-danger hidden">
+          <i class="fas fa-ban mr-2"></i> Annuler la commande
+        </button>
+        <button id="process-order" class="btn-primary hidden">
+          <i class="fas fa-cog mr-2"></i> Marquer en cours
+        </button>
+        <button id="complete-order" class="btn-success hidden">
+          <i class="fas fa-check mr-2"></i> Marquer terminée
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-white py-8 mt-8">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div>
+          <h3 class="text-xl font-bold mb-4">BraveSMM</h3>
+          <p class="mb-4">Votre partenaire pour booster votre présence sur les réseaux sociaux.</p>
+          <div class="flex space-x-4">
+            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram"></i></a>
+          </div>
+        </div>
+        <div>
+          <h3 class="text-xl font-bold mb-4">Liens rapides</h3>
+          <ul class="space-y-2">
+            <li><a href="../index.html" class="text-gray-400 hover:text-white">Accueil</a></li>
+            <li><a href="../shop.html" class="text-gray-400 hover:text-white">Boutique</a></li>
+            <li><a href="../about.html" class="text-gray-400 hover:text-white">À propos</a></li>
+            <li><a href="../contact.html" class="text-gray-400 hover:text-white">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-xl font-bold mb-4">Contact</h3>
+          <ul class="space-y-2">
+            <li class="flex items-start">
+              <i class="fas fa-envelope mt-1 mr-2 text-gray-400"></i>
+              <span>contact@bravesmm.com</span>
+            </li>
+            <li class="flex items-start">
+              <i class="fas fa-phone-alt mt-1 mr-2 text-gray-400"></i>
+              <span>+33 1 23 45 67 89</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-gray-700 mt-8 pt-6 text-center text-gray-400">
+        <p>&copy; 2024 BraveSMM. Tous droits réservés.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="../js/unified.js"></script>
+  <script>
+    // Variables pour la pagination
+    let currentPage = 1;
+    let ordersPerPage = 10;
+    let filteredOrders = [];
+    let allOrders = [];
+    
+    // Initialiser la page
+    document.addEventListener('DOMContentLoaded', () => {
+      // Vérifier si l'utilisateur est connecté et est admin
+      if (!auth.isLoggedIn() || !auth.isAdmin()) {
+        window.location.href = '../login.html?redirect=admin/orders.html';
+        return;
+      }
+      
+      // Configurer le menu utilisateur
+      auth.setupUserMenu();
+      
+      // Configurer le menu mobile
+      auth.setupMobileMenu();
+      
+      // Mettre à jour le compteur du panier
+      app.updateCartCount();
+      
+      // Charger les commandes
+      loadAdminOrders();
+      
+      // Configurer les filtres
+      setupFilters();
+      
+      // Configurer la pagination
+      setupPagination();
+      
+      // Configurer le modal de détails
+      setupModal();
+    });
+    
+    // Charger les commandes admin
+    function loadAdminOrders() {
+      try {
+        // Récupérer les commandes depuis le localStorage
+        const orders = JSON.parse(localStorage.getItem('adminOrders')) || [];
+        
+        // Trier les commandes par date (la plus récente en premier)
+        allOrders = orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        
+        // Appliquer les filtres initiaux
+        applyFilters();
+        
+        // Afficher les commandes
+        displayOrders();
+      } catch (error) {
+        console.error('Erreur lors du chargement des commandes:', error);
+        document.getElementById('orders-table-body').innerHTML = `
+          <tr>
+            <td colspan="7" class="px-6 py-4 text-center text-red-500">
+              Une erreur est survenue lors du chargement des commandes.
+              <button class="btn-primary mt-2" onclick="loadAdminOrders()">Réessayer</button>
+            </td>
+          </tr>
+        `;
+      }
+    }
+    
+    // Configurer les filtres
+    function setupFilters() {
+      // Filtre par statut
+      const statusFilter = document.getElementById('status-filter');
+      statusFilter.addEventListener('change', () => {
+        applyFilters();
+        displayOrders();
+      });
+      
+      // Recherche
+      const searchInput = document.getElementById('order-search');
+      searchInput.addEventListener('input', () => {
+        applyFilters();
+        displayOrders();
+      });
+    }
+    
+    // Appliquer les filtres
+    function applyFilters() {
+      const statusFilter = document.getElementById('status-filter').value;
+      const searchTerm = document.getElementById('order-search').value.toLowerCase();
+      
+      filteredOrders = allOrders.filter(order => {
+        // Filtre par statut
+        if (statusFilter && order.status !== statusFilter) {
+          return false;
+        }
+        
+        // Recherche
+        if (searchTerm) {
+          const searchFields = [
+            order._id,
+            order.userName || '',
+            order.userEmail || '',
+            order.socialMediaUsername || ''
+          ];
+          
+          return searchFields.some(field => field.toLowerCase().includes(searchTerm));
+        }
+        
+        return true;
+      });
+      
+      // Réinitialiser la pagination
+      currentPage = 1;
+      updatePagination();
+    }
+    
+    // Configurer la pagination
+    function setupPagination() {
+      // Boutons de pagination mobile
+      document.getElementById('prev-page-mobile').addEventListener('click', () => {
+        if (currentPage > 1) {
+          currentPage--;
+          displayOrders();
+          updatePagination();
+        }
+      });
+      
+      document.getElementById('next-page-mobile').addEventListener('click', () => {
+        const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
+        if (currentPage < totalPages) {
+          currentPage++;
+          displayOrders();
+          updatePagination();
+        }
+      });
+      
+      // Boutons de pagination desktop
+      document.getElementById('prev-page').addEventListener('click', () => {
+        if (currentPage > 1) {
+          currentPage--;
+          displayOrders();
+          updatePagination();
+        }
+      });
+      
+      document.getElementById('next-page').addEventListener('click', () => {
+        const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
+        if (currentPage < totalPages) {
+          currentPage++;
+          displayOrders();
+          updatePagination();
+        }
+      });
+    }
+    
+    // Mettre à jour la pagination
+    function updatePagination() {
+      const totalItems = filteredOrders.length;
+      const totalPages = Math.ceil(totalItems / ordersPerPage);
+      
+      // Mettre à jour les informations de pagination
+      document.getElementById('total-items').textContent = totalItems;
+      
+      const startItem = totalItems === 0 ? 0 : (currentPage - 1) * ordersPerPage + 1;
+      const endItem = Math.min(currentPage * ordersPerPage, totalItems);
+      
+      document.getElementById('start-item').textContent = startItem;
+      document.getElementById('end-item').textContent = endItem;
+      
+      // Générer les numéros de page
+      const pageNumbers = document.getElementById('page-numbers');
+      pageNumbers.innerHTML = '';
+      
+      // Limiter le nombre de pages affichées
+      const maxVisiblePages = 5;
+      let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+      
+      if (endPage - startPage + 1 < maxVisiblePages) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+      }
+      
+      // Ajouter la première page si nécessaire
+      if (startPage > 1) {
+        const pageButton = createPageButton(1);
+        pageNumbers.appendChild(pageButton);
+        
+        if (startPage > 2) {
+          const ellipsis = document.createElement('span');
+          ellipsis.className = 'relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700';
+          ellipsis.textContent = '...';
+          pageNumbers.appendChild(ellipsis);
+        }
+      }
+      
+      // Ajouter les pages
+      for (let i = startPage; i <= endPage; i++) {
+        const pageButton = createPageButton(i);
+        pageNumbers.appendChild(pageButton);
+      }
+      
+      // Ajouter la dernière page si nécessaire
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+          const ellipsis = document.createElement('span');
+          ellipsis.className = 'relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700';
+          ellipsis.textContent = '...';
+          pageNumbers.appendChild(ellipsis);
+        }
+        
+        const pageButton = createPageButton(totalPages);
+        pageNumbers.appendChild(pageButton);
+      }
+      
+      // Désactiver les boutons si nécessaire
+      document.getElementById('prev-page').disabled = currentPage === 1;
+      document.getElementById('next-page').disabled = currentPage === totalPages;
+      document.getElementById('prev-page-mobile').disabled = currentPage === 1;
+      document.getElementById('next-page-mobile').disabled = currentPage === totalPages;
+    }
+    
+    // Créer un bouton de page
+    function createPageButton(pageNumber) {
+      const button = document.createElement('button');
+      button.className = `relative inline-flex items-center px-4 py-2 border ${
+        pageNumber === currentPage
+          ? 'border-blue-500 bg-blue-50 text-blue-600'
+          : 'border-gray-300 bg-white text-gray-500 hover:bg-gray-50'
+      } text-sm font-medium`;
+      button.textContent = pageNumber;
+      
+      button.addEventListener('click', () => {
+        currentPage = pageNumber;
+        displayOrders();
+        updatePagination();
+      });
+      
+      return button;
+    }
+    
+    // Afficher les commandes
+    function displayOrders() {
+      const tableBody = document.getElementById('orders-table-body');
+      
+      // Calculer les indices de début et de fin
+      const startIndex = (currentPage - 1) * ordersPerPage;
+      const endIndex = Math.min(startIndex + ordersPerPage, filteredOrders.length);
+      
+      // Récupérer les commandes à afficher
+      const ordersToDisplay = filteredOrders.slice(startIndex, endIndex);
+      
+      if (ordersToDisplay.length === 0) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+              Aucune commande trouvée.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      // Générer les lignes du tableau
+      tableBody.innerHTML = '';
+      
+      ordersToDisplay.forEach(order => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-gray-50';
+        
+        // Formater la date
+        const orderDate = new Date(order.createdAt).toLocaleDateString('fr-FR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        
+        // Déterminer la classe de statut
+        let statusClass = '';
+        switch (order.status.toLowerCase()) {
+          case 'en attente':
+            statusClass = 'status-badge status-pending';
+            break;
+          case 'en cours':
+            statusClass = 'status-badge status-processing';
+            break;
+          case 'terminée':
+            statusClass = 'status-badge status-completed';
+            break;
+          case 'annulée':
+            statusClass = 'status-badge status-cancelled';
+            break;
+          default:
+            statusClass = 'status-badge';
+        }
+        
+        // Déterminer le statut de paiement
+        const paymentStatus = order.isPaid
+          ? '<span class="text-green-600"><i class="fas fa-check-circle mr-1"></i> Payé</span>'
+          : '<span class="text-red-600"><i class="fas fa-times-circle mr-1"></i> Non payé</span>';
+        
+        tr.innerHTML = `
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm font-medium text-gray-900">${order._id.substring(order._id.length - 8)}</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm font-medium text-gray-900">${order.userName || 'Utilisateur'}</div>
+            <div class="text-sm text-gray-500">${order.userEmail || ''}</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">${orderDate}</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm font-medium text-gray-900">${order.totalPrice.toFixed(2)} €</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm">${paymentStatus}</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <span class="${statusClass}">${order.status}</span>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+            <button class="text-blue-600 hover:text-blue-900 mr-2" onclick="showOrderDetails('${order._id}')">
+              <i class="fas fa-eye"></i>
+            </button>
+            <button class="text-green-600 hover:text-green-900 mr-2" onclick="updateOrderStatus('${order._id}', 'En cours')">
+              <i class="fas fa-cog"></i>
+            </button>
+            <button class="text-red-600 hover:text-red-900" onclick="updateOrderStatus('${order._id}', 'Annulée')">
+              <i class="fas fa-ban"></i>
+            </button>
+          </td>
+        `;
+        
+        tableBody.appendChild(tr);
+      });
+    }
+    
+    // Configurer le modal de détails
+    function setupModal() {
+      // Fermer le modal
+      document.getElementById('close-modal').addEventListener('click', () => {
+        document.getElementById('order-details-modal').classList.add('hidden');
+      });
+      
+      // Boutons d'action
+      document.getElementById('cancel-order').addEventListener('click', () => {
+        const orderId = document.getElementById('modal-order-id').textContent;
+        updateOrderStatus(orderId, 'Annulée');
+      });
+      
+      document.getElementById('process-order').addEventListener('click', () => {
+        const orderId = document.getElementById('modal-order-id').textContent;
+        updateOrderStatus(orderId, 'En cours');
+      });
+      
+      document.getElementById('complete-order').addEventListener('click', () => {
+        const orderId = document.getElementById('modal-order-id').textContent;
+        updateOrderStatus(orderId, 'Terminée');
+      });
+    }
+    
+    // Afficher les détails d'une commande
+    function showOrderDetails(orderId) {
+      try {
+        // Récupérer la commande
+        const order = allOrders.find(o => o._id === orderId);
+        
+        if (!order) {
+          app.showAlert('Commande introuvable', 'error');
+          return;
+        }
+        
+        // Mettre à jour l'ID de la commande dans le modal
+        document.getElementById('modal-order-id').textContent = order._id.substring(order._id.length - 8);
+        
+        // Formater les dates
+        const orderDate = new Date(order.createdAt).toLocaleDateString('fr-FR', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        
+        let paidDate = 'Non payé';
+        if (order.isPaid && order.paidAt) {
+          paidDate = new Date(order.paidAt).toLocaleDateString('fr-FR', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+        }
+        
+        // Déterminer la classe de statut
+        let statusClass = '';
+        switch (order.status.toLowerCase()) {
+          case 'en attente':
+            statusClass = 'bg-yellow-100 text-yellow-800';
+            break;
+          case 'en cours':
+            statusClass = 'bg-blue-100 text-blue-800';
+            break;
+          case 'terminée':
+            statusClass = 'bg-green-100 text-green-800';
+            break;
+          case 'annulée':
+            statusClass = 'bg-red-100 text-red-800';
+            break;
+          default:
+            statusClass = 'bg-gray-100 text-gray-800';
+        }
+        
+        // Générer les informations de paiement
+        let paymentInfo = '<p class="text-red-600"><i class="fas fa-times-circle mr-1"></i> Non payé</p>';
+        
+        if (order.isPaid && order.paymentInfo) {
+          const paymentMethod = order.paymentInfo.method === 'stripe' ? 'Carte bancaire' : 'PayPal';
+          const paymentIcon = order.paymentInfo.method === 'stripe' 
+            ? '<i class="fas fa-credit-card mr-1"></i>' 
+            : '<i class="fab fa-paypal mr-1"></i>';
+          
+          paymentInfo = `
+            <p class="text-green-600 mb-2"><i class="fas fa-check-circle mr-1"></i> Payé le ${paidDate}</p>
+            <p class="mb-1"><span class="font-medium">Méthode:</span> ${paymentIcon} ${paymentMethod}</p>
+            <p class="mb-1"><span class="font-medium">ID Transaction:</span> ${order.paymentInfo.id}</p>
+            <p><span class="font-medium">Montant:</span> ${order.paymentInfo.amount.toFixed(2)} ${order.paymentInfo.currency}</p>
+          `;
+        }
+        
+        // Générer le contenu du modal
+        document.getElementById('modal-content').innerHTML = `
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+              <h3 class="text-lg font-bold mb-2">Informations client</h3>
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <p class="mb-1"><span class="font-medium">Nom:</span> ${order.userName || 'Non spécifié'}</p>
+                <p class="mb-1"><span class="font-medium">Email:</span> ${order.userEmail || 'Non spécifié'}</p>
+                <p><span class="font-medium">Profil:</span> ${order.socialMediaUsername}</p>
+              </div>
+            </div>
+            
+            <div>
+              <h3 class="text-lg font-bold mb-2">Informations commande</h3>
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <p class="mb-1"><span class="font-medium">Date:</span> ${orderDate}</p>
+                <p class="mb-1"><span class="font-medium">Statut:</span> <span class="px-2 py-1 rounded-full text-xs font-medium ${statusClass}">${order.status}</span></p>
+                <p><span class="font-medium">Total:</span> ${order.totalPrice.toFixed(2)} €</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mb-6">
+            <h3 class="text-lg font-bold mb-2">Paiement</h3>
+            <div class="bg-gray-50 p-4 rounded-lg">
+              ${paymentInfo}
+            </div>
+          </div>
+          
+          <div>
+            <h3 class="text-lg font-bold mb-2">Articles commandés</h3>
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead>
+                  <tr>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produit</th>
+                    <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Quantité</th>
+                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Prix</th>
+                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                  ${order.orderItems.map(item => `
+                    <tr>
+                      <td class="px-4 py-3">
+                        <div class="font-medium">${item.name}</div>
+                        <div class="text-sm text-gray-500">${item.description ? item.description.substring(0, 50) + '...' : ''}</div>
+                      </td>
+                      <td class="px-4 py-3 text-center">${item.qty}</td>
+                      <td class="px-4 py-3 text-right">${item.price.toFixed(2)} €</td>
+                      <td class="px-4 py-3 text-right font-medium">${(item.price * item.qty).toFixed(2)} €</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+                <tfoot>
+                  <tr class="font-bold">
+                    <td class="px-4 py-3" colspan="3">Total</td>
+                    <td class="px-4 py-3 text-right">${order.totalPrice.toFixed(2)} €</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        `;
+        
+        // Afficher/masquer les boutons d'action en fonction du statut
+        const cancelOrderBtn = document.getElementById('cancel-order');
+        const processOrderBtn = document.getElementById('process-order');
+        const completeOrderBtn = document.getElementById('complete-order');
+        
+        // Réinitialiser les boutons
+        cancelOrderBtn.classList.add('hidden');
+        processOrderBtn.classList.add('hidden');
+        completeOrderBtn.classList.add('hidden');
+        
+        // Afficher les boutons appropriés
+        if (order.status === 'En attente') {
+          cancelOrderBtn.classList.remove('hidden');
+          processOrderBtn.classList.remove('hidden');
+        } else if (order.status === 'En cours') {
+          cancelOrderBtn.classList.remove('hidden');
+          completeOrderBtn.classList.remove('hidden');
+        }
+        
+        // Afficher le modal
+        document.getElementById('order-details-modal').classList.remove('hidden');
+      } catch (error) {
+        console.error('Erreur lors de l\'affichage des détails de la commande:', error);
+        app.showAlert('Erreur lors de l\'affichage des détails de la commande', 'error');
+      }
+    }
+    
+    // Mettre à jour le statut d'une commande
+    function updateOrderStatus(orderId, newStatus) {
+      try {
+        // Récupérer les commandes
+        const adminOrders = JSON.parse(localStorage.getItem('adminOrders')) || [];
+        const userOrders = JSON.parse(localStorage.getItem('orders')) || [];
+        
+        // Trouver la commande dans les commandes admin
+        const adminOrderIndex = adminOrders.findIndex(o => o._id === orderId);
+        
+        if (adminOrderIndex === -1) {
+          app.showAlert('Commande introuvable', 'error');
+          return;
+        }
+        
+        // Mettre à jour le statut
+        adminOrders[adminOrderIndex].status = newStatus;
+        adminOrders[adminOrderIndex].updatedAt = new Date().toISOString();
+        
+        // Enregistrer les commandes admin
+        localStorage.setItem('adminOrders', JSON.stringify(adminOrders));
+        
+        // Mettre à jour également dans les commandes utilisateur
+        const userOrderIndex = userOrders.findIndex(o => o._id === orderId);
+        
+        if (userOrderIndex !== -1) {
+          userOrders[userOrderIndex].status = newStatus;
+          userOrders[userOrderIndex].updatedAt = new Date().toISOString();
+          localStorage.setItem('orders', JSON.stringify(userOrders));
+        }
+        
+        // Fermer le modal si ouvert
+        document.getElementById('order-details-modal').classList.add('hidden');
+        
+        // Recharger les commandes
+        loadAdminOrders();
+        
+        // Afficher un message de confirmation
+        app.showAlert(`Statut de la commande mis à jour: ${newStatus}`, 'success');
+      } catch (error) {
+        console.error('Erreur lors de la mise à jour du statut:', error);
+        app.showAlert('Erreur lors de la mise à jour du statut', 'error');
+      }
+    }
+  </script>
+</body>
+</html>

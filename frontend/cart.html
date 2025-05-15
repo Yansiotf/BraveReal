@@ -107,7 +107,7 @@
 
   <!-- Checkout Modal -->
   <div id="checkout-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md max-h-90vh overflow-y-auto">
       <h2 class="text-2xl font-bold mb-4">Finaliser la commande</h2>
       
       <form id="checkout-form">
@@ -117,7 +117,7 @@
           <p class="text-sm text-gray-600 mt-1">Ce champ est nécessaire pour traiter votre commande</p>
         </div>
         
-        <div class="mb-6">
+        <div class="mb-4">
           <h3 class="font-bold mb-2">Résumé de la commande</h3>
           <div class="bg-gray-100 p-3 rounded">
             <div class="flex justify-between mb-2">
@@ -127,11 +127,64 @@
           </div>
         </div>
         
-        <div class="flex justify-end space-x-2">
+        <div class="mb-4">
+          <label class="form-label">Méthode de paiement *</label>
+          <div class="mt-2 space-y-2">
+            <div class="flex items-center">
+              <input type="radio" id="payment-stripe" name="payment-method" value="stripe" class="mr-2" checked>
+              <label for="payment-stripe" class="flex items-center">
+                <span class="mr-2">Carte bancaire</span>
+                <img src="https://cdn.jsdelivr.net/npm/simple-icons@v5/icons/visa.svg" alt="Visa" class="h-6 w-6 inline-block mr-1">
+                <img src="https://cdn.jsdelivr.net/npm/simple-icons@v5/icons/mastercard.svg" alt="Mastercard" class="h-6 w-6 inline-block mr-1">
+                <img src="https://cdn.jsdelivr.net/npm/simple-icons@v5/icons/americanexpress.svg" alt="American Express" class="h-6 w-6 inline-block">
+              </label>
+            </div>
+            <div class="flex items-center">
+              <input type="radio" id="payment-paypal" name="payment-method" value="paypal" class="mr-2">
+              <label for="payment-paypal" class="flex items-center">
+                <span class="mr-2">PayPal</span>
+                <img src="https://cdn.jsdelivr.net/npm/simple-icons@v5/icons/paypal.svg" alt="PayPal" class="h-6 w-6 inline-block">
+              </label>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Formulaire de paiement Stripe -->
+        <div id="stripe-payment-form" class="mb-4 p-4 border border-gray-200 rounded-lg">
+          <div class="mb-4">
+            <label for="cardholder-name" class="form-label">Nom du titulaire de la carte *</label>
+            <input type="text" id="cardholder-name" class="form-input" placeholder="Nom complet" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Informations de carte *</label>
+            <div id="stripe-card-element" class="p-3 border border-gray-300 rounded-md bg-white"></div>
+            <div id="stripe-card-errors" class="text-red-500 text-sm mt-1"></div>
+          </div>
+          <p class="text-sm text-gray-500">Vos informations de paiement sont sécurisées.</p>
+        </div>
+        
+        <!-- Formulaire de paiement PayPal -->
+        <div id="paypal-payment-form" class="mb-4 hidden">
+          <div id="paypal-button-container" class="mt-2"></div>
+          <p class="text-sm text-gray-500 mt-2">Vous serez redirigé vers PayPal pour finaliser votre paiement.</p>
+        </div>
+        
+        <div class="flex justify-between">
           <button type="button" id="cancel-checkout" class="btn-secondary">Annuler</button>
-          <button type="submit" class="btn-primary">Confirmer et payer</button>
+          <button type="submit" id="stripe-submit-button" class="btn-primary">
+            <i class="fas fa-lock mr-2"></i> Payer maintenant
+          </button>
         </div>
       </form>
+    </div>
+  </div>
+  
+  <!-- Modal de traitement du paiement -->
+  <div id="payment-processing-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md text-center">
+      <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-solid mx-auto mb-4"></div>
+      <h2 class="text-xl font-bold mb-2">Traitement du paiement</h2>
+      <p class="text-gray-600">Veuillez patienter pendant que nous traitons votre paiement...</p>
     </div>
   </div>
 
@@ -179,7 +232,11 @@
 
   <!-- Scripts -->
   <script src="js/unified.js"></script>
+  <script src="js/payment.js"></script>
   <script>
+    let stripeSession = null;
+    let paypalButtonRendered = false;
+    
     // Initialize the page
     document.addEventListener('DOMContentLoaded', () => {
       // Load cart
@@ -195,10 +252,18 @@
         });
       }
       
+      // Setup payment method selection
+      const paymentMethodRadios = document.querySelectorAll('input[name="payment-method"]');
+      paymentMethodRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+          togglePaymentForms(this.value);
+        });
+      });
+      
       // Setup checkout form
       const checkoutForm = document.getElementById('checkout-form');
       if (checkoutForm) {
-        checkoutForm.addEventListener('submit', function(e) {
+        checkoutForm.addEventListener('submit', async function(e) {
           e.preventDefault();
           
           const socialUsername = document.getElementById('social-username').value;
@@ -208,13 +273,12 @@
             return;
           }
           
-          // Process order
-          if (typeof app.placeOrder === 'function') {
-            app.placeOrder(socialUsername);
-          } else {
-            console.error('La fonction placeOrder n\'est pas définie');
-            app.showAlert('Une erreur est survenue lors de la commande. Veuillez réessayer.', 'error');
+          const paymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
+          
+          if (paymentMethod === 'stripe') {
+            await processStripePayment(socialUsername);
           }
+          // PayPal est géré par son propre bouton
         });
       }
       
@@ -227,31 +291,217 @@
       }
     });
     
-    // Show checkout modal
+    // Afficher le modal de paiement
     function showCheckoutModal() {
       const modal = document.getElementById('checkout-modal');
       const modalTotal = document.getElementById('modal-total');
       const cartTotal = document.getElementById('cart-total').textContent;
       
-      // Check if user is logged in
+      // Vérifier si l'utilisateur est connecté
       if (!auth.isLoggedIn()) {
         app.showAlert('Veuillez vous connecter pour passer une commande', 'error');
         window.location.href = 'login.html';
         return;
       }
       
-      // Check if cart is empty
+      // Vérifier si le panier est vide
       const cart = JSON.parse(localStorage.getItem('cartItems')) || [];
       if (cart.length === 0) {
         app.showAlert('Votre panier est vide', 'error');
         return;
       }
       
-      // Update modal total
+      // Mettre à jour le total dans le modal
       modalTotal.textContent = cartTotal;
       
-      // Show modal
+      // Afficher le modal
       modal.classList.remove('hidden');
+      
+      // Initialiser le formulaire de paiement par défaut (Stripe)
+      initializeStripeForm();
+      
+      // Afficher le formulaire de paiement par défaut
+      togglePaymentForms('stripe');
+    }
+    
+    // Basculer entre les formulaires de paiement
+    function togglePaymentForms(method) {
+      const stripeForm = document.getElementById('stripe-payment-form');
+      const paypalForm = document.getElementById('paypal-payment-form');
+      const stripeSubmitButton = document.getElementById('stripe-submit-button');
+      
+      if (method === 'stripe') {
+        stripeForm.classList.remove('hidden');
+        paypalForm.classList.add('hidden');
+        stripeSubmitButton.classList.remove('hidden');
+        
+        // Initialiser Stripe si ce n'est pas déjà fait
+        initializeStripeForm();
+      } else if (method === 'paypal') {
+        stripeForm.classList.add('hidden');
+        paypalForm.classList.remove('hidden');
+        stripeSubmitButton.classList.add('hidden');
+        
+        // Initialiser PayPal si ce n'est pas déjà fait
+        initializePayPalButton();
+      }
+    }
+    
+    // Initialiser le formulaire Stripe
+    async function initializeStripeForm() {
+      try {
+        // Calculer le montant total
+        const cart = JSON.parse(localStorage.getItem('cartItems')) || [];
+        const totalAmount = cart.reduce((total, item) => total + (item.price * item.qty), 0);
+        
+        // Créer une session Stripe
+        stripeSession = await payment.createStripeSession({
+          amount: totalAmount,
+          currency: 'eur',
+          description: 'Commande BraveSMM'
+        });
+        
+        // Afficher les erreurs de carte
+        const displayError = document.getElementById('stripe-card-errors');
+        stripeSession.card.addEventListener('change', function(event) {
+          if (event.error) {
+            displayError.textContent = event.error.message;
+          } else {
+            displayError.textContent = '';
+          }
+        });
+      } catch (error) {
+        console.error('Erreur lors de l\'initialisation du formulaire Stripe:', error);
+        app.showAlert('Erreur lors de l\'initialisation du paiement. Veuillez réessayer.', 'error');
+      }
+    }
+    
+    // Initialiser le bouton PayPal
+    async function initializePayPalButton() {
+      if (paypalButtonRendered) return;
+      
+      try {
+        // Calculer le montant total
+        const cart = JSON.parse(localStorage.getItem('cartItems')) || [];
+        const totalAmount = cart.reduce((total, item) => total + (item.price * item.qty), 0);
+        
+        // Rendre le bouton PayPal
+        await payment.renderPayPalButton('paypal-button-container', {
+          amount: totalAmount,
+          description: 'Commande BraveSMM'
+        });
+        
+        // Configurer le bouton PayPal
+        paypal.Buttons({
+          createOrder: function(data, actions) {
+            return actions.order.create({
+              purchase_units: [{
+                amount: {
+                  value: totalAmount.toFixed(2)
+                }
+              }]
+            });
+          },
+          onApprove: function(data, actions) {
+            return actions.order.capture().then(function(details) {
+              // Afficher le modal de traitement
+              document.getElementById('payment-processing-modal').classList.remove('hidden');
+              document.getElementById('checkout-modal').classList.add('hidden');
+              
+              // Récupérer le nom d'utilisateur
+              const socialUsername = document.getElementById('social-username').value;
+              
+              // Traiter la commande avec PayPal
+              processOrder(socialUsername, 'paypal', {
+                paymentId: details.id,
+                payerEmail: details.payer.email_address
+              });
+            });
+          },
+          onError: function(err) {
+            console.error('Erreur PayPal:', err);
+            app.showAlert('Erreur lors du paiement PayPal. Veuillez réessayer.', 'error');
+          }
+        }).render('#paypal-button-container');
+        
+        paypalButtonRendered = true;
+      } catch (error) {
+        console.error('Erreur lors de l\'initialisation du bouton PayPal:', error);
+        app.showAlert('Erreur lors de l\'initialisation du paiement PayPal. Veuillez réessayer.', 'error');
+      }
+    }
+    
+    // Traiter le paiement Stripe
+    async function processStripePayment(socialUsername) {
+      try {
+        if (!stripeSession) {
+          throw new Error('Session Stripe non initialisée');
+        }
+        
+        // Récupérer le nom du titulaire de la carte
+        const cardholderName = document.getElementById('cardholder-name').value;
+        if (!cardholderName) {
+          app.showAlert('Veuillez saisir le nom du titulaire de la carte', 'error');
+          return;
+        }
+        
+        // Afficher le modal de traitement
+        document.getElementById('payment-processing-modal').classList.remove('hidden');
+        document.getElementById('checkout-modal').classList.add('hidden');
+        
+        // Traiter le paiement Stripe
+        const result = await payment.processStripePayment(stripeSession, cardholderName);
+        
+        if (result.success) {
+          // Traiter la commande avec Stripe
+          processOrder(socialUsername, 'stripe', {
+            paymentId: result.paymentId,
+            cardholderName: cardholderName
+          });
+        } else {
+          throw new Error(result.error || 'Erreur lors du paiement');
+        }
+      } catch (error) {
+        console.error('Erreur lors du traitement du paiement Stripe:', error);
+        app.showAlert('Erreur lors du paiement. Veuillez réessayer.', 'error');
+        
+        // Masquer le modal de traitement
+        document.getElementById('payment-processing-modal').classList.add('hidden');
+      }
+    }
+    
+    // Traiter la commande après paiement
+    async function processOrder(socialUsername, paymentMethod, paymentDetails) {
+      try {
+        // Calculer le montant total
+        const cart = JSON.parse(localStorage.getItem('cartItems')) || [];
+        const totalAmount = cart.reduce((total, item) => total + (item.price * item.qty), 0);
+        
+        // Créer l'objet de paiement
+        const paymentInfo = {
+          method: paymentMethod,
+          id: paymentDetails.paymentId,
+          amount: totalAmount,
+          currency: 'EUR',
+          status: 'completed',
+          details: paymentDetails,
+          timestamp: new Date().toISOString()
+        };
+        
+        // Passer la commande avec les informations de paiement
+        if (typeof app.placeOrder === 'function') {
+          await app.placeOrder(socialUsername, paymentInfo);
+        } else {
+          console.error('La fonction placeOrder n\'est pas définie');
+          throw new Error('Erreur lors de la commande');
+        }
+      } catch (error) {
+        console.error('Erreur lors du traitement de la commande:', error);
+        app.showAlert('Erreur lors de la commande. Veuillez réessayer.', 'error');
+        
+        // Masquer le modal de traitement
+        document.getElementById('payment-processing-modal').classList.add('hidden');
+      }
     }
   </script>
 </body>
