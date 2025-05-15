@@ -325,7 +325,7 @@ app.addToCart = function(product) {
   animateCartIcon();
   
   // Afficher un message de confirmation
-  showAlert(`${product.name} a été ajouté au panier`, 'success');
+  app.showAlert(`${product.name} a été ajouté au panier`, 'success');
 }
 
 // Fonction pour animer l'icône du panier
@@ -496,13 +496,13 @@ function removeCartItem(productId) {
   updateCartCount();
   
   // Afficher un message de confirmation
-  showAlert('Article supprimé du panier', 'info');
+  app.showAlert('Article supprimé du panier', 'info');
 }
 
 // Fonction pour passer une commande
 async function placeOrder(socialMediaUsername) {
   if (!auth.isLoggedIn()) {
-    showAlert('Veuillez vous connecter pour passer une commande', 'error');
+    app.showAlert('Veuillez vous connecter pour passer une commande', 'error');
     window.location.href = 'login.html';
     return;
   }
@@ -510,12 +510,12 @@ async function placeOrder(socialMediaUsername) {
   const cart = JSON.parse(localStorage.getItem('cartItems')) || [];
   
   if (cart.length === 0) {
-    showAlert('Votre panier est vide', 'error');
+    app.showAlert('Votre panier est vide', 'error');
     return;
   }
   
   if (!socialMediaUsername) {
-    showAlert('Veuillez fournir un nom d\'utilisateur ou un lien de profil', 'error');
+    app.showAlert('Veuillez fournir un nom d\'utilisateur ou un lien de profil', 'error');
     return;
   }
   
@@ -562,7 +562,7 @@ async function placeOrder(socialMediaUsername) {
     window.location.href = `order-confirmation.html?id=${data._id}`;
   } catch (error) {
     console.error('Erreur lors de la commande:', error);
-    showAlert(error.message || 'Erreur lors de la commande', 'error');
+    app.showAlert(error.message || 'Erreur lors de la commande', 'error');
   }
 }
 
@@ -997,33 +997,18 @@ async function updateOrderStatus(orderId, status) {
     loadAdminOrders();
     
     // Afficher un message de confirmation
-    showAlert('Statut mis à jour avec succès', 'success');
+    app.showAlert('Statut mis à jour avec succès', 'success');
   } catch (error) {
     console.error('Erreur lors de la mise à jour du statut:', error);
-    showAlert(error.message || 'Erreur lors de la mise à jour du statut', 'error');
+    app.showAlert(error.message || 'Erreur lors de la mise à jour du statut', 'error');
   }
 }
 
 // Initialiser l'application
 document.addEventListener('DOMContentLoaded', () => {
   // Mettre à jour le compteur du panier
-  updateCartCount();
+  app.updateCartCount();
 });
 
-// Exporter les fonctions
-window.app = {
-  showAlert,
-  loadFeaturedProducts,
-  loadCategories,
-  loadProducts,
-  addToCart,
-  updateCartCount,
-  loadCart,
-  updateCartItemQuantity,
-  removeCartItem,
-  placeOrder,
-  loadUserOrders,
-  loadOrderDetails,
-  loadAdminOrders,
-  updateOrderStatus
-};
+// Exporter l'objet app
+window.app = app;

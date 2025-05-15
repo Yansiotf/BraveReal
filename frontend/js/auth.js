@@ -149,15 +149,15 @@ function setupMobileMenu() {
   });
 }
 
-// Exporter les fonctions
-window.auth = {
-  isLoggedIn,
-  isAdmin,
-  getUserInfo,
-  getToken,
-  login,
-  register,
-  logout,
-  setupUserMenu,
-  setupMobileMenu
-};
+// Ajouter les autres fonctions à l'objet auth
+auth.isAdmin = isAdmin;
+auth.getUserInfo = getUserInfo;
+auth.getToken = getToken;
+auth.login = login;
+auth.register = register;
+auth.logout = logout;
+auth.setupUserMenu = setupUserMenu;
+auth.setupMobileMenu = setupMobileMenu;
+
+// Exporter l'objet auth
+window.auth = auth;
