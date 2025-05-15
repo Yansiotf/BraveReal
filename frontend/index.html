@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="BraveSMM - Services de qualité pour booster votre présence sur les réseaux sociaux. Instagram, TikTok, YouTube et plus encore.">
+  <title>BraveSMM - Services de Médias Sociaux</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" type="image/png" href="favicon.png">
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+  <!-- Header/Navigation -->
+  <header class="bg-white shadow-sm sticky top-0 z-50">
+    <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
+      <a href="index.html" class="text-2xl font-bold text-blue-600 flex items-center">
+        <span class="mr-2"><i class="fas fa-rocket"></i></span>
+        BraveSMM
+      </a>
+      
+      <div class="hidden md:flex space-x-8">
+        <a href="index.html" class="nav-link text-gray-700 hover:text-blue-600 active">Accueil</a>
+        <a href="shop.html" class="nav-link text-gray-700 hover:text-blue-600">Boutique</a>
+        <a href="#" class="nav-link text-gray-700 hover:text-blue-600">À propos</a>
+        <a href="#" class="nav-link text-gray-700 hover:text-blue-600">Contact</a>
+      </div>
+      
+      <div class="flex items-center space-x-6">
+        <a href="cart.html" class="text-gray-700 hover:text-blue-600 relative transition-transform hover:scale-110">
+          <i class="fas fa-shopping-cart"></i>
+          <span id="cart-count" class="absolute -top-2 -right-2 bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium">0</span>
+        </a>
+        
+        <div id="user-menu" class="relative">
+          <button id="user-menu-button" class="text-gray-700 hover:text-blue-600 transition-transform hover:scale-110">
+            <i class="fas fa-user"></i>
+          </button>
+          <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 fade-in">
+            <div id="logged-out-menu">
+              <a href="login.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Connexion</a>
+              <a href="register.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Inscription</a>
+            </div>
+            <div id="logged-in-menu" class="hidden">
+              <a href="profile.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Mon profil</a>
+              <a href="orders.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Mes commandes</a>
+              <a href="#" id="logout-button" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Déconnexion</a>
+            </div>
+            <div id="admin-menu" class="hidden border-t border-gray-200">
+              <a href="admin/dashboard.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Administration</a>
+            </div>
+          </div>
+        </div>
+        
+        <button id="mobile-menu-button" class="md:hidden text-gray-700 focus:outline-none">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+    </nav>
+    
+    <div id="mobile-menu" class="hidden md:hidden px-4 py-2 bg-gray-50 shadow-inner">
+      <a href="index.html" class="block py-2 text-gray-700 font-medium">Accueil</a>
+      <a href="shop.html" class="block py-2 text-gray-700">Boutique</a>
+      <a href="#" class="block py-2 text-gray-700">À propos</a>
+      <a href="#" class="block py-2 text-gray-700">Contact</a>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-grow">
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-16">
+      <div class="container mx-auto px-4">
+        <div class="max-w-3xl mx-auto text-center">
+          <h1 class="text-4xl md:text-5xl font-bold mb-6 leading-tight">Boostez votre présence sur les réseaux sociaux</h1>
+          <p class="text-xl mb-8 opacity-90">Services de qualité pour Instagram, TikTok, YouTube et plus encore</p>
+          <a href="shop.html" class="inline-block bg-white text-blue-600 font-bold py-3 px-8 rounded-lg hover:bg-gray-100 transition duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1">
+            Voir nos services <i class="fas fa-arrow-right ml-2"></i>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Featured Categories -->
+    <section class="py-16 bg-white">
+      <div class="container mx-auto px-4">
+        <h2 class="text-2xl md:text-3xl font-bold mb-3 text-center">Nos services populaires</h2>
+        <p class="text-gray-600 text-center mb-10 max-w-2xl mx-auto">Choisissez parmi notre gamme de services pour augmenter votre visibilité et votre engagement sur les plateformes sociales</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8" id="featured-categories">
+          <!-- Categories will be loaded here -->
+          <div class="category-card bg-white rounded-lg shadow-sm hover:shadow-lg">
+            <div class="category-icon text-pink-500">
+              <i class="fab fa-instagram"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-3">Instagram</h3>
+            <p class="text-gray-600 mb-4">Abonnés, likes et commentaires pour augmenter votre influence</p>
+            <a href="shop.html?category=instagram" class="btn-primary">Voir les services</a>
+          </div>
+          
+          <div class="category-card bg-white rounded-lg shadow-sm hover:shadow-lg">
+            <div class="category-icon text-black">
+              <i class="fab fa-tiktok"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-3">TikTok</h3>
+            <p class="text-gray-600 mb-4">Followers, vues et partages pour devenir viral</p>
+            <a href="shop.html?category=tiktok" class="btn-primary">Voir les services</a>
+          </div>
+          
+          <div class="category-card bg-white rounded-lg shadow-sm hover:shadow-lg">
+            <div class="category-icon text-red-600">
+              <i class="fab fa-youtube"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-3">YouTube</h3>
+            <p class="text-gray-600 mb-4">Abonnés, vues et likes pour développer votre chaîne</p>
+            <a href="shop.html?category=youtube" class="btn-primary">Voir les services</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Featured Products -->
+    <section class="py-16 bg-gray-50">
+      <div class="container mx-auto px-4">
+        <h2 class="text-2xl md:text-3xl font-bold mb-3 text-center">Services populaires</h2>
+        <p class="text-gray-600 text-center mb-10 max-w-2xl mx-auto">Découvrez nos services les plus demandés par nos clients</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="featured-products">
+          <!-- Products will be loaded here -->
+          <div class="loader"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Why Choose Us -->
+    <section class="py-16 bg-white">
+      <div class="container mx-auto px-4">
+        <h2 class="text-2xl md:text-3xl font-bold mb-3 text-center">Pourquoi nous choisir ?</h2>
+        <p class="text-gray-600 text-center mb-10 max-w-2xl mx-auto">Nous nous engageons à fournir des services de qualité avec une satisfaction garantie</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="text-center p-6 rounded-lg hover:bg-blue-50 transition-colors duration-300">
+            <div class="bg-blue-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
+              <i class="fas fa-bolt text-blue-600 text-3xl"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-3">Livraison rapide</h3>
+            <p class="text-gray-600">Nos services sont livrés rapidement pour des résultats immédiats et visibles.</p>
+          </div>
+          
+          <div class="text-center p-6 rounded-lg hover:bg-blue-50 transition-colors duration-300">
+            <div class="bg-blue-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
+              <i class="fas fa-shield-alt text-blue-600 text-3xl"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-3">Sécurité garantie</h3>
+            <p class="text-gray-600">Vos informations sont protégées et vos comptes sont en sécurité avec nos services.</p>
+          </div>
+          
+          <div class="text-center p-6 rounded-lg hover:bg-blue-50 transition-colors duration-300">
+            <div class="bg-blue-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
+              <i class="fas fa-headset text-blue-600 text-3xl"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-3">Support 24/7</h3>
+            <p class="text-gray-600">Notre équipe est disponible à tout moment pour répondre à toutes vos questions.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Testimonials -->
+    <section class="py-16 bg-gray-50">
+      <div class="container mx-auto px-4">
+        <h2 class="text-2xl md:text-3xl font-bold mb-3 text-center">Ce que disent nos clients</h2>
+        <p class="text-gray-600 text-center mb-10 max-w-2xl mx-auto">Découvrez les témoignages de clients satisfaits qui ont utilisé nos services</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="bg-white p-6 rounded-lg shadow-sm">
+            <div class="flex items-center mb-4">
+              <div class="text-yellow-400 flex">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+              </div>
+              <span class="ml-2 text-gray-600">5.0</span>
+            </div>
+            <p class="text-gray-600 mb-4">"J'ai vu une augmentation significative de mon engagement sur Instagram après avoir utilisé les services de BraveSMM. Très satisfait !"</p>
+            <div class="flex items-center">
+              <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">M</div>
+              <div class="ml-3">
+                <p class="font-medium">Marie L.</p>
+                <p class="text-sm text-gray-500">Influenceuse</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-white p-6 rounded-lg shadow-sm">
+            <div class="flex items-center mb-4">
+              <div class="text-yellow-400 flex">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+              </div>
+              <span class="ml-2 text-gray-600">5.0</span>
+            </div>
+            <p class="text-gray-600 mb-4">"Service client exceptionnel et résultats rapides. Ma chaîne YouTube a gagné en visibilité en quelques jours seulement."</p>
+            <div class="flex items-center">
+              <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">T</div>
+              <div class="ml-3">
+                <p class="font-medium">Thomas R.</p>
+                <p class="text-sm text-gray-500">YouTubeur</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-white p-6 rounded-lg shadow-sm">
+            <div class="flex items-center mb-4">
+              <div class="text-yellow-400 flex">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star-half-alt"></i>
+              </div>
+              <span class="ml-2 text-gray-600">4.5</span>
+            </div>
+            <p class="text-gray-600 mb-4">"Très bon rapport qualité-prix. Les followers TikTok que j'ai reçus sont de qualité et mon compte continue de croître."</p>
+            <div class="flex items-center">
+              <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">S</div>
+              <div class="ml-3">
+                <p class="font-medium">Sophie D.</p>
+                <p class="text-sm text-gray-500">Créatrice TikTok</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- CTA Section -->
+    <section class="py-16 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+      <div class="container mx-auto px-4 text-center">
+        <h2 class="text-3xl font-bold mb-4">Prêt à booster votre présence en ligne ?</h2>
+        <p class="text-xl mb-8 opacity-90 max-w-2xl mx-auto">Commencez dès aujourd'hui et voyez la différence avec nos services de qualité</p>
+        <a href="shop.html" class="inline-block bg-white text-blue-600 font-bold py-3 px-8 rounded-lg hover:bg-gray-100 transition duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1">
+          Commencer maintenant <i class="fas fa-arrow-right ml-2"></i>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-white py-12">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div>
+          <h3 class="text-xl font-bold mb-4 flex items-center">
+            <span class="mr-2"><i class="fas fa-rocket"></i></span>
+            BraveSMM
+          </h3>
+          <p class="mb-4 text-gray-300">Votre partenaire de confiance pour booster votre présence sur les réseaux sociaux.</p>
+          <div class="flex space-x-4">
+            <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300 text-lg">
+              <i class="fab fa-facebook-f"></i>
+            </a>
+            <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300 text-lg">
+              <i class="fab fa-twitter"></i>
+            </a>
+            <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300 text-lg">
+              <i class="fab fa-instagram"></i>
+            </a>
+            <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300 text-lg">
+              <i class="fab fa-linkedin-in"></i>
+            </a>
+          </div>
+        </div>
+        
+        <div>
+          <h3 class="text-lg font-bold mb-4">Liens rapides</h3>
+          <ul class="space-y-2">
+            <li><a href="index.html" class="text-gray-400 hover:text-white footer-link">Accueil</a></li>
+            <li><a href="shop.html" class="text-gray-400 hover:text-white footer-link">Boutique</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white footer-link">À propos</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white footer-link">Contact</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h3 class="text-lg font-bold mb-4">Services</h3>
+          <ul class="space-y-2">
+            <li><a href="shop.html?category=instagram" class="text-gray-400 hover:text-white footer-link">Instagram</a></li>
+            <li><a href="shop.html?category=tiktok" class="text-gray-400 hover:text-white footer-link">TikTok</a></li>
+            <li><a href="shop.html?category=youtube" class="text-gray-400 hover:text-white footer-link">YouTube</a></li>
+            <li><a href="shop.html?category=facebook" class="text-gray-400 hover:text-white footer-link">Facebook</a></li>
+            <li><a href="shop.html?category=twitter" class="text-gray-400 hover:text-white footer-link">Twitter</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h3 class="text-lg font-bold mb-4">Contact</h3>
+          <ul class="space-y-3">
+            <li class="flex items-start">
+              <i class="fas fa-envelope mt-1 mr-3 text-gray-400"></i>
+              <span class="text-gray-300">contact@bravesmm.com</span>
+            </li>
+            <li class="flex items-start">
+              <i class="fas fa-phone-alt mt-1 mr-3 text-gray-400"></i>
+              <span class="text-gray-300">+33 1 23 45 67 89</span>
+            </li>
+            <li class="flex items-start">
+              <i class="fas fa-map-marker-alt mt-1 mr-3 text-gray-400"></i>
+              <span class="text-gray-300">Paris, France</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="border-t border-gray-700 mt-10 pt-6 flex flex-col md:flex-row justify-between items-center">
+        <p class="text-gray-400 mb-4 md:mb-0">&copy; 2024 BraveSMM. Tous droits réservés.</p>
+        <div class="flex space-x-6">
+          <a href="#" class="text-gray-400 hover:text-white">Conditions d'utilisation</a>
+          <a href="#" class="text-gray-400 hover:text-white">Politique de confidentialité</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/auth.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', () => {
+      // Load featured products
+      app.loadFeaturedProducts();
+      
+      // Setup user menu
+      auth.setupUserMenu();
+      
+      // Setup mobile menu
+      auth.setupMobileMenu();
+      
+      // Update cart count
+      app.updateCartCount();
+    });
+  </script>
+</body>
+</html>

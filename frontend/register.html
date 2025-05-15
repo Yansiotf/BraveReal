@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inscription - BraveSMM</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+  <!-- Header/Navigation -->
+  <header class="bg-white shadow-md">
+    <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
+      <a href="index.html" class="text-2xl font-bold text-blue-600">BraveSMM</a>
+      
+      <div class="hidden md:flex space-x-6">
+        <a href="index.html" class="text-gray-700 hover:text-blue-600">Accueil</a>
+        <a href="shop.html" class="text-gray-700 hover:text-blue-600">Boutique</a>
+        <a href="#" class="text-gray-700 hover:text-blue-600">À propos</a>
+        <a href="#" class="text-gray-700 hover:text-blue-600">Contact</a>
+      </div>
+      
+      <div class="flex items-center space-x-4">
+        <a href="cart.html" class="text-gray-700 hover:text-blue-600 relative">
+          <i class="fas fa-shopping-cart"></i>
+          <span id="cart-count" class="absolute -top-2 -right-2 bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">0</span>
+        </a>
+        
+        <button id="mobile-menu-button" class="md:hidden text-gray-700">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+    </nav>
+    
+    <div id="mobile-menu" class="hidden md:hidden px-4 py-2 bg-gray-50">
+      <a href="index.html" class="block py-2 text-gray-700">Accueil</a>
+      <a href="shop.html" class="block py-2 text-gray-700">Boutique</a>
+      <a href="#" class="block py-2 text-gray-700">À propos</a>
+      <a href="#" class="block py-2 text-gray-700">Contact</a>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-grow container mx-auto px-4 py-8 flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-md p-8 w-full max-w-md">
+      <h1 class="text-2xl font-bold mb-6 text-center">Inscription</h1>
+      
+      <div id="register-error" class="hidden alert alert-error mb-4"></div>
+      
+      <form id="register-form">
+        <div class="mb-4">
+          <label for="name" class="form-label">Nom</label>
+          <input type="text" id="name" class="form-input" required>
+        </div>
+        
+        <div class="mb-4">
+          <label for="email" class="form-label">Email</label>
+          <input type="email" id="email" class="form-input" required>
+        </div>
+        
+        <div class="mb-4">
+          <label for="password" class="form-label">Mot de passe</label>
+          <input type="password" id="password" class="form-input" required minlength="6">
+          <p class="text-sm text-gray-600 mt-1">Le mot de passe doit contenir au moins 6 caractères</p>
+        </div>
+        
+        <div class="mb-6">
+          <label for="confirm-password" class="form-label">Confirmer le mot de passe</label>
+          <input type="password" id="confirm-password" class="form-input" required>
+        </div>
+        
+        <button type="submit" class="btn-primary w-full mb-4">S'inscrire</button>
+        
+        <p class="text-center text-gray-600">
+          Vous avez déjà un compte ? 
+          <a href="login.html" class="text-blue-600 hover:underline">Se connecter</a>
+        </p>
+      </form>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-white py-8">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div>
+          <h3 class="text-xl font-bold mb-4">BraveSMM</h3>
+          <p class="mb-4">Votre partenaire pour booster votre présence sur les réseaux sociaux.</p>
+          <div class="flex space-x-4">
+            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram"></i></a>
+          </div>
+        </div>
+        <div>
+          <h3 class="text-xl font-bold mb-4">Liens rapides</h3>
+          <ul class="space-y-2">
+            <li><a href="index.html" class="text-gray-400 hover:text-white">Accueil</a></li>
+            <li><a href="shop.html" class="text-gray-400 hover:text-white">Boutique</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white">À propos</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-xl font-bold mb-4">Contact</h3>
+          <ul class="space-y-2">
+            <li class="flex items-start">
+              <i class="fas fa-envelope mt-1 mr-2 text-gray-400"></i>
+              <span>contact@bravesmm.com</span>
+            </li>
+            <li class="flex items-start">
+              <i class="fas fa-phone-alt mt-1 mr-2 text-gray-400"></i>
+              <span>+33 1 23 45 67 89</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-gray-700 mt-8 pt-6 text-center text-gray-400">
+        <p>&copy; 2024 BraveSMM. Tous droits réservés.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/auth.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', () => {
+      // Check if user is already logged in
+      if (auth.isLoggedIn()) {
+        window.location.href = 'index.html';
+        return;
+      }
+      
+      // Setup mobile menu
+      auth.setupMobileMenu();
+      
+      // Update cart count
+      app.updateCartCount();
+      
+      // Setup register form
+      const registerForm = document.getElementById('register-form');
+      const registerError = document.getElementById('register-error');
+      
+      registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
+        
+        // Validate passwords match
+        if (password !== confirmPassword) {
+          registerError.textContent = 'Les mots de passe ne correspondent pas';
+          registerError.classList.remove('hidden');
+          return;
+        }
+        
+        try {
+          // Show loading state
+          const submitButton = registerForm.querySelector('button[type="submit"]');
+          submitButton.disabled = true;
+          submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Inscription...';
+          
+          // Hide previous error
+          registerError.classList.add('hidden');
+          
+          // Attempt registration
+          await auth.register(name, email, password);
+          
+          // Redirect on success
+          window.location.href = 'index.html';
+        } catch (error) {
+          // Show error
+          registerError.textContent = error.message || 'Erreur lors de l\'inscription';
+          registerError.classList.remove('hidden');
+          
+          // Reset button
+          submitButton.disabled = false;
+          submitButton.innerHTML = 'S\'inscrire';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
