@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion des produits - BraveSMM Admin</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="../css/styles.css">
+  <style>
+    .product-card {
+      transition: all 0.3s ease;
+    }
+    .product-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+  <!-- Header/Navigation -->
+  <header class="bg-white shadow-md">
+    <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
+      <a href="../index.html" class="text-2xl font-bold text-blue-600">BraveSMM</a>
+      
+      <div class="hidden md:flex space-x-6">
+        <a href="dashboard.html" class="text-gray-700 hover:text-blue-600">Tableau de bord</a>
+        <a href="orders.html" class="text-gray-700 hover:text-blue-600">Commandes</a>
+        <a href="products.html" class="text-blue-600 border-b-2 border-blue-600">Produits</a>
+        <a href="categories.html" class="text-gray-700 hover:text-blue-600">Catégories</a>
+      </div>
+      
+      <div class="flex items-center space-x-4">
+        <a href="../cart.html" class="text-gray-700 hover:text-blue-600 relative">
+          <i class="fas fa-shopping-cart"></i>
+          <span id="cart-count" class="absolute -top-2 -right-2 bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">0</span>
+        </a>
+        
+        <div id="user-menu" class="relative">
+          <button id="user-menu-button" class="flex items-center text-gray-700 hover:text-blue-600 focus:outline-none">
+            <i class="fas fa-user-circle text-xl mr-1"></i>
+            <span id="username-display">Compte</span>
+            <i class="fas fa-chevron-down ml-1 text-xs"></i>
+          </button>
+          
+          <div id="user-dropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 hidden">
+            <div id="logged-out-menu" class="hidden">
+              <a href="../login.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Se connecter</a>
+              <a href="../register.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">S'inscrire</a>
+            </div>
+            
+            <div id="logged-in-menu" class="hidden">
+              <a href="../profile.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Mon profil</a>
+              <a href="../orders.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Mes commandes</a>
+              <button id="logout-button" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">Se déconnecter</button>
+            </div>
+            
+            <div id="admin-menu" class="hidden">
+              <div class="border-t border-gray-100"></div>
+              <a href="dashboard.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Administration</a>
+            </div>
+          </div>
+        </div>
+        
+        <button id="mobile-menu-button" class="md:hidden text-gray-700 hover:text-blue-600 focus:outline-none">
+          <i class="fas fa-bars text-xl"></i>
+        </button>
+      </div>
+    </nav>
+    
+    <div id="mobile-menu" class="md:hidden bg-white border-t border-gray-200 py-2 hidden">
+      <a href="dashboard.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Tableau de bord</a>
+      <a href="orders.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Commandes</a>
+      <a href="products.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 bg-gray-50">Produits</a>
+      <a href="categories.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Catégories</a>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-grow container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold">Gestion des produits</h1>
+      <button id="add-product-button" class="btn-primary">
+        <i class="fas fa-plus mr-2"></i> Ajouter un produit
+      </button>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 mb-6">
+        <div class="flex items-center space-x-4">
+          <div class="relative">
+            <input type="text" id="product-search" class="form-input pl-10" placeholder="Rechercher un produit...">
+            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+          </div>
+          
+          <div>
+            <select id="category-filter" class="form-select">
+              <option value="">Toutes les catégories</option>
+              <!-- Les catégories seront ajoutées dynamiquement -->
+            </select>
+          </div>
+        </div>
+        
+        <div class="flex items-center space-x-4">
+          <div>
+            <select id="sort-products" class="form-select">
+              <option value="name-asc">Nom (A-Z)</option>
+              <option value="name-desc">Nom (Z-A)</option>
+              <option value="price-asc">Prix (croissant)</option>
+              <option value="price-desc">Prix (décroissant)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      
+      <div id="products-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Les produits seront ajoutés dynamiquement -->
+        <div class="animate-pulse">
+          <div class="bg-gray-200 h-48 rounded-t-lg"></div>
+          <div class="p-4 border border-gray-200 rounded-b-lg">
+            <div class="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+            <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+            <div class="h-10 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+        <div class="animate-pulse">
+          <div class="bg-gray-200 h-48 rounded-t-lg"></div>
+          <div class="p-4 border border-gray-200 rounded-b-lg">
+            <div class="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+            <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+            <div class="h-10 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+        <div class="animate-pulse">
+          <div class="bg-gray-200 h-48 rounded-t-lg"></div>
+          <div class="p-4 border border-gray-200 rounded-b-lg">
+            <div class="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+            <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+            <div class="h-10 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Product Form Modal -->
+  <div id="product-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg p-6 w-full max-w-2xl max-h-90vh overflow-y-auto">
+      <div class="flex justify-between items-center mb-4">
+        <h2 id="modal-title" class="text-2xl font-bold">Ajouter un produit</h2>
+        <button id="close-product-modal" class="text-gray-500 hover:text-gray-700">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+      
+      <form id="product-form">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label for="product-name" class="form-label">Nom du produit *</label>
+            <input type="text" id="product-name" class="form-input" required>
+          </div>
+          
+          <div>
+            <label for="product-category" class="form-label">Catégorie *</label>
+            <select id="product-category" class="form-select" required>
+              <!-- Les catégories seront ajoutées dynamiquement -->
+            </select>
+          </div>
+        </div>
+        
+        <div class="mb-4">
+          <label for="product-description" class="form-label">Description</label>
+          <textarea id="product-description" class="form-textarea" rows="4"></textarea>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div>
+            <label for="product-price" class="form-label">Prix (€) *</label>
+            <input type="number" id="product-price" class="form-input" min="0" step="0.01" required>
+          </div>
+          
+          <div>
+            <label for="product-stock" class="form-label">Stock</label>
+            <input type="number" id="product-stock" class="form-input" min="0" value="999">
+          </div>
+          
+          <div>
+            <label for="product-status" class="form-label">Statut</label>
+            <select id="product-status" class="form-select">
+              <option value="active">Actif</option>
+              <option value="inactive">Inactif</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="mb-4">
+          <label for="product-image" class="form-label">Image URL</label>
+          <input type="text" id="product-image" class="form-input" placeholder="https://example.com/image.jpg">
+          <p class="text-sm text-gray-500 mt-1">Entrez l'URL d'une image ou laissez vide pour utiliser une image par défaut</p>
+        </div>
+        
+        <div class="flex justify-end space-x-2">
+          <button type="button" id="cancel-product" class="btn-secondary">Annuler</button>
+          <button type="submit" id="save-product" class="btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="delete-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+      <h2 class="text-xl font-bold mb-4">Confirmer la suppression</h2>
+      <p class="mb-6">Êtes-vous sûr de vouloir supprimer ce produit ? Cette action est irréversible.</p>
+      
+      <div class="flex justify-end space-x-2">
+        <button id="cancel-delete" class="btn-secondary">Annuler</button>
+        <button id="confirm-delete" class="btn-danger">Supprimer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-white py-8 mt-8">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div>
+          <h3 class="text-xl font-bold mb-4">BraveSMM</h3>
+          <p class="mb-4">Votre partenaire pour booster votre présence sur les réseaux sociaux.</p>
+          <div class="flex space-x-4">
+            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram"></i></a>
+          </div>
+        </div>
+        <div>
+          <h3 class="text-xl font-bold mb-4">Liens rapides</h3>
+          <ul class="space-y-2">
+            <li><a href="../index.html" class="text-gray-400 hover:text-white">Accueil</a></li>
+            <li><a href="../shop.html" class="text-gray-400 hover:text-white">Boutique</a></li>
+            <li><a href="../about.html" class="text-gray-400 hover:text-white">À propos</a></li>
+            <li><a href="../contact.html" class="text-gray-400 hover:text-white">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-xl font-bold mb-4">Contact</h3>
+          <ul class="space-y-2">
+            <li class="flex items-start">
+              <i class="fas fa-envelope text-gray-400 mt-1 mr-2"></i>
+              <span>support@bravesmm.com</span>
+            </li>
+            <li class="flex items-start">
+              <i class="fas fa-phone text-gray-400 mt-1 mr-2"></i>
+              <span>+33 1 23 45 67 89</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-gray-700 mt-8 pt-6 text-center text-gray-400">
+        <p>&copy; 2023 BraveSMM. Tous droits réservés.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="../js/unified.js"></script>
+  <script>
+    // Variables globales
+    let products = [];
+    let categories = [];
+    let currentProductId = null;
+    
+    // Initialiser la page
+    document.addEventListener('DOMContentLoaded', () => {
+      // Vérifier si l'utilisateur est connecté et est admin
+      if (!auth.isLoggedIn() || !auth.isAdmin()) {
+        window.location.href = '../login.html';
+        return;
+      }
+      
+      // Configurer le menu utilisateur
+      auth.setupUserMenu();
+      
+      // Configurer le menu mobile
+      auth.setupMobileMenu();
+      
+      // Mettre à jour le compteur du panier
+      app.updateCartCount();
+      
+      // Charger les produits et les catégories
+      loadProducts();
+      loadCategories();
+      
+      // Configurer les événements
+      setupEventListeners();
+      
+      // Configurer les liens de navigation admin
+      setupAdminNavigation();
+    });
+    
+    // Configurer les liens de navigation admin
+    function setupAdminNavigation() {
+      // Corriger les liens de navigation
+      const navLinks = document.querySelectorAll('nav a');
+      navLinks.forEach(link => {
+        // S'assurer que les liens fonctionnent correctement
+        link.addEventListener('click', function(e) {
+          const href = this.getAttribute('href');
+          if (href && href !== '#' && !href.startsWith('http')) {
+            e.preventDefault();
+            window.location.href = href;
+          }
+        });
+      });
+    }
+    
+    // Charger les produits
+    function loadProducts() {
+      try {
+        // Récupérer les produits depuis le localStorage
+        products = JSON.parse(localStorage.getItem('products')) || [];
+        
+        // Appliquer les filtres et le tri
+        filterAndSortProducts();
+      } catch (error) {
+        console.error('Erreur lors du chargement des produits:', error);
+        app.showAlert('Erreur lors du chargement des produits', 'error');
+      }
+    }
+    
+    // Charger les catégories
+    function loadCategories() {
+      try {
+        // Récupérer les catégories depuis le localStorage
+        categories = JSON.parse(localStorage.getItem('categories')) || [];
+        
+        // Remplir les sélecteurs de catégories
+        populateCategorySelectors();
+      } catch (error) {
+        console.error('Erreur lors du chargement des catégories:', error);
+        app.showAlert('Erreur lors du chargement des catégories', 'error');
+      }
+    }
+    
+    // Remplir les sélecteurs de catégories
+    function populateCategorySelectors() {
+      const categoryFilter = document.getElementById('category-filter');
+      const productCategory = document.getElementById('product-category');
+      
+      // Vider les sélecteurs
+      categoryFilter.innerHTML = '<option value="">Toutes les catégories</option>';
+      productCategory.innerHTML = '';
+      
+      // Ajouter les catégories
+      categories.forEach(category => {
+        categoryFilter.innerHTML += `<option value="${category._id}">${category.name}</option>`;
+        productCategory.innerHTML += `<option value="${category._id}">${category.name}</option>`;
+      });
+    }
+    
+    // Filtrer et trier les produits
+    function filterAndSortProducts() {
+      const searchTerm = document.getElementById('product-search').value.toLowerCase();
+      const categoryId = document.getElementById('category-filter').value;
+      const sortOption = document.getElementById('sort-products').value;
+      
+      // Filtrer les produits
+      let filteredProducts = products.filter(product => {
+        const matchesSearch = product.name.toLowerCase().includes(searchTerm) || 
+                             (product.description && product.description.toLowerCase().includes(searchTerm));
+        const matchesCategory = !categoryId || product.categoryId === categoryId;
+        
+        return matchesSearch && matchesCategory;
+      });
+      
+      // Trier les produits
+      switch (sortOption) {
+        case 'name-asc':
+          filteredProducts.sort((a, b) => a.name.localeCompare(b.name));
+          break;
+        case 'name-desc':
+          filteredProducts.sort((a, b) => b.name.localeCompare(a.name));
+          break;
+        case 'price-asc':
+          filteredProducts.sort((a, b) => a.price - b.price);
+          break;
+        case 'price-desc':
+          filteredProducts.sort((a, b) => b.price - a.price);
+          break;
+      }
+      
+      // Afficher les produits
+      displayProducts(filteredProducts);
+    }
+    
+    // Afficher les produits
+    function displayProducts(productsToDisplay) {
+      const container = document.getElementById('products-container');
+      
+      if (productsToDisplay.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full text-center py-8">
+            <i class="fas fa-search text-gray-400 text-4xl mb-4"></i>
+            <p class="text-gray-500">Aucun produit trouvé.</p>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = '';
+      
+      productsToDisplay.forEach(product => {
+        // Trouver la catégorie
+        const category = categories.find(c => c._id === product.categoryId) || { name: 'Non catégorisé' };
+        
+        // Créer la carte produit
+        const productCard = document.createElement('div');
+        productCard.className = 'product-card bg-white rounded-lg overflow-hidden shadow-md';
+        
+        // Image du produit
+        const imageUrl = product.image || 'https://via.placeholder.com/300x200?text=Produit';
+        
+        productCard.innerHTML = `
+          <div class="h-48 bg-gray-200 overflow-hidden">
+            <img src="${imageUrl}" alt="${product.name}" class="w-full h-full object-cover">
+          </div>
+          <div class="p-4">
+            <div class="flex justify-between items-start mb-2">
+              <h3 class="font-bold text-lg">${product.name}</h3>
+              <span class="text-blue-600 font-bold">${product.price.toFixed(2)} €</span>
+            </div>
+            <div class="mb-2">
+              <span class="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">${category.name}</span>
+              <span class="inline-block ${product.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} text-xs px-2 py-1 rounded ml-1">
+                ${product.status === 'active' ? 'Actif' : 'Inactif'}
+              </span>
+            </div>
+            <p class="text-gray-600 text-sm mb-4 line-clamp-2">${product.description || 'Aucune description'}</p>
+            <div class="flex justify-end space-x-2">
+              <button class="edit-product btn-secondary btn-sm" data-id="${product._id}">
+                <i class="fas fa-edit mr-1"></i> Modifier
+              </button>
+              <button class="delete-product btn-danger btn-sm" data-id="${product._id}">
+                <i class="fas fa-trash-alt mr-1"></i> Supprimer
+              </button>
+            </div>
+          </div>
+        `;
+        
+        container.appendChild(productCard);
+      });
+      
+      // Ajouter les écouteurs d'événements pour les boutons
+      document.querySelectorAll('.edit-product').forEach(button => {
+        button.addEventListener('click', () => {
+          const productId = button.getAttribute('data-id');
+          openProductModal(productId);
+        });
+      });
+      
+      document.querySelectorAll('.delete-product').forEach(button => {
+        button.addEventListener('click', () => {
+          const productId = button.getAttribute('data-id');
+          openDeleteModal(productId);
+        });
+      });
+    }
+    
+    // Configurer les écouteurs d'événements
+    function setupEventListeners() {
+      // Recherche et filtres
+      document.getElementById('product-search').addEventListener('input', filterAndSortProducts);
+      document.getElementById('category-filter').addEventListener('change', filterAndSortProducts);
+      document.getElementById('sort-products').addEventListener('change', filterAndSortProducts);
+      
+      // Bouton d'ajout de produit
+      document.getElementById('add-product-button').addEventListener('click', () => {
+        openProductModal();
+      });
+      
+      // Fermer le modal de produit
+      document.getElementById('close-product-modal').addEventListener('click', closeProductModal);
+      document.getElementById('cancel-product').addEventListener('click', closeProductModal);
+      
+      // Fermer le modal de suppression
+      document.getElementById('cancel-delete').addEventListener('click', closeDeleteModal);
+      
+      // Formulaire de produit
+      document.getElementById('product-form').addEventListener('submit', saveProduct);
+      
+      // Confirmation de suppression
+      document.getElementById('confirm-delete').addEventListener('click', deleteProduct);
+    }
+    
+    // Ouvrir le modal de produit
+    function openProductModal(productId = null) {
+      currentProductId = productId;
+      
+      const modalTitle = document.getElementById('modal-title');
+      const productForm = document.getElementById('product-form');
+      
+      if (productId) {
+        // Mode édition
+        modalTitle.textContent = 'Modifier le produit';
+        
+        // Trouver le produit
+        const product = products.find(p => p._id === productId);
+        
+        if (product) {
+          // Remplir le formulaire
+          document.getElementById('product-name').value = product.name;
+          document.getElementById('product-category').value = product.categoryId || '';
+          document.getElementById('product-description').value = product.description || '';
+          document.getElementById('product-price').value = product.price;
+          document.getElementById('product-stock').value = product.stock || 999;
+          document.getElementById('product-status').value = product.status || 'active';
+          document.getElementById('product-image').value = product.image || '';
+        }
+      } else {
+        // Mode ajout
+        modalTitle.textContent = 'Ajouter un produit';
+        productForm.reset();
+      }
+      
+      // Afficher le modal
+      document.getElementById('product-modal').classList.remove('hidden');
+    }
+    
+    // Fermer le modal de produit
+    function closeProductModal() {
+      document.getElementById('product-modal').classList.add('hidden');
+      currentProductId = null;
+    }
+    
+    // Ouvrir le modal de suppression
+    function openDeleteModal(productId) {
+      currentProductId = productId;
+      document.getElementById('delete-modal').classList.remove('hidden');
+    }
+    
+    // Fermer le modal de suppression
+    function closeDeleteModal() {
+      document.getElementById('delete-modal').classList.add('hidden');
+      currentProductId = null;
+    }
+    
+    // Enregistrer un produit
+    function saveProduct(e) {
+      e.preventDefault();
+      
+      try {
+        // Récupérer les valeurs du formulaire
+        const name = document.getElementById('product-name').value;
+        const categoryId = document.getElementById('product-category').value;
+        const description = document.getElementById('product-description').value;
+        const price = parseFloat(document.getElementById('product-price').value);
+        const stock = parseInt(document.getElementById('product-stock').value);
+        const status = document.getElementById('product-status').value;
+        const image = document.getElementById('product-image').value;
+        
+        // Valider les données
+        if (!name || isNaN(price) || price < 0) {
+          app.showAlert('Veuillez remplir tous les champs obligatoires correctement', 'error');
+          return;
+        }
+        
+        // Créer l'objet produit
+        const product = {
+          name,
+          categoryId,
+          description,
+          price,
+          stock,
+          status,
+          image
+        };
+        
+        if (currentProductId) {
+          // Mode édition
+          product._id = currentProductId;
+          
+          // Trouver l'index du produit
+          const productIndex = products.findIndex(p => p._id === currentProductId);
+          
+          if (productIndex !== -1) {
+            // Mettre à jour le produit
+            products[productIndex] = { ...products[productIndex], ...product };
+          }
+        } else {
+          // Mode ajout
+          product._id = 'product_' + Date.now();
+          product.createdAt = new Date().toISOString();
+          
+          // Ajouter le produit
+          products.push(product);
+        }
+        
+        // Enregistrer les produits
+        localStorage.setItem('products', JSON.stringify(products));
+        
+        // Fermer le modal
+        closeProductModal();
+        
+        // Recharger les produits
+        loadProducts();
+        
+        // Afficher un message de confirmation
+        app.showAlert(`Produit ${currentProductId ? 'modifié' : 'ajouté'} avec succès`, 'success');
+      } catch (error) {
+        console.error('Erreur lors de l\'enregistrement du produit:', error);
+        app.showAlert('Erreur lors de l\'enregistrement du produit', 'error');
+      }
+    }
+    
+    // Supprimer un produit
+    function deleteProduct() {
+      try {
+        if (!currentProductId) {
+          app.showAlert('Produit introuvable', 'error');
+          return;
+        }
+        
+        // Trouver l'index du produit
+        const productIndex = products.findIndex(p => p._id === currentProductId);
+        
+        if (productIndex === -1) {
+          app.showAlert('Produit introuvable', 'error');
+          return;
+        }
+        
+        // Supprimer le produit
+        products.splice(productIndex, 1);
+        
+        // Enregistrer les produits
+        localStorage.setItem('products', JSON.stringify(products));
+        
+        // Fermer le modal
+        closeDeleteModal();
+        
+        // Recharger les produits
+        loadProducts();
+        
+        // Afficher un message de confirmation
+        app.showAlert('Produit supprimé avec succès', 'success');
+      } catch (error) {
+        console.error('Erreur lors de la suppression du produit:', error);
+        app.showAlert('Erreur lors de la suppression du produit', 'error');
+      }
+    }
+  </script>
+</body>
+</html>

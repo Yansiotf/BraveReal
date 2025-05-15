@@ -801,6 +801,8 @@
     // Mettre à jour le statut d'une commande
     function updateOrderStatus(orderId, newStatus) {
       try {
+        console.log(`Mise à jour du statut de la commande ${orderId} vers ${newStatus}`);
+        
         // Récupérer les commandes
         const adminOrders = JSON.parse(localStorage.getItem('adminOrders')) || [];
         const userOrders = JSON.parse(localStorage.getItem('orders')) || [];
@@ -809,6 +811,28 @@
         const adminOrderIndex = adminOrders.findIndex(o => o._id === orderId);
         
         if (adminOrderIndex === -1) {
+          console.error(`Commande introuvable dans adminOrders: ${orderId}`);
+          console.log('Commandes disponibles:', adminOrders.map(o => o._id));
+          
+          // Essayer de trouver la commande par d'autres moyens
+          const orderById = adminOrders.find(o => String(o._id) === String(orderId));
+          if (orderById) {
+            console.log('Commande trouvée avec conversion de type');
+            // Mettre à jour le statut
+            orderById.status = newStatus;
+            orderById.updatedAt = new Date().toISOString();
+            
+            // Enregistrer les commandes admin
+            localStorage.setItem('adminOrders', JSON.stringify(adminOrders));
+            
+            // Afficher un message de confirmation
+            app.showAlert(`Statut de la commande mis à jour: ${newStatus}`, 'success');
+            
+            // Recharger les commandes
+            loadAdminOrders();
+            return;
+          }
+          
           app.showAlert('Commande introuvable', 'error');
           return;
         }
@@ -827,6 +851,8 @@
           userOrders[userOrderIndex].status = newStatus;
           userOrders[userOrderIndex].updatedAt = new Date().toISOString();
           localStorage.setItem('orders', JSON.stringify(userOrders));
+        } else {
+          console.log(`Commande ${orderId} non trouvée dans les commandes utilisateur`);
         }
         
         // Fermer le modal si ouvert
