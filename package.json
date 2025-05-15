@@ -10,8 +10,7 @@
     "dev-full": "concurrently \"npm run dev\" \"npm run client\"",
     "data:import": "node backend/data/seeder",
     "data:destroy": "node backend/data/seeder -d",
-    "build": "node frontend/build.js",
-    "heroku-postbuild": "npm install --prefix frontend && npm run build"
+    "build": "echo 'No build step needed for static frontend'"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

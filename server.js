@@ -29,14 +29,13 @@ app.use('/api/categories', require('./backend/routes/categoryRoutes'));
 app.use('/api/users', require('./backend/routes/userRoutes'));
 app.use('/api/orders', require('./backend/routes/orderRoutes'));
 
-// Servir les fichiers statiques en production
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, 'frontend/build')));
-  
-  app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, 'frontend', 'build', 'index.html'));
-  });
-}
+// Servir les fichiers statiques
+app.use(express.static(path.join(__dirname, 'frontend')));
+
+// Pour toutes les autres routes, servir index.html
+app.get('*', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'frontend', 'index.html'));
+});
 
 // Port et démarrage du serveur
 const PORT = process.env.PORT || 5000;
