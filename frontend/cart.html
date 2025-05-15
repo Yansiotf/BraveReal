@@ -304,22 +304,10 @@
     
     // Initialiser le bouton PayPal
     async function initializePayPalButton() {
-      if (paypalButtonRendered) return;
-      
       try {
         // Calculer le montant total
         const cart = JSON.parse(localStorage.getItem('cartItems')) || [];
         const totalAmount = cart.reduce((total, item) => total + (item.price * item.qty), 0);
-        
-        // Vérifier que le nom d'utilisateur est fourni
-        const socialUsername = document.getElementById('social-username').value;
-        if (!socialUsername) {
-          app.showAlert('Veuillez fournir un nom d\'utilisateur ou un lien de profil', 'error');
-          return;
-        }
-        
-        // Rendre le bouton PayPal
-        const paypal = await payment.initPayPal();
         
         // Vider le conteneur avant de rendre le bouton
         const container = document.getElementById('paypal-button-container');
@@ -327,21 +315,45 @@
           container.innerHTML = '';
         }
         
-        paypal.Buttons({
+        // Rendre le bouton PayPal
+        const paypal = await payment.initPayPal();
+        
+        console.log("Initialisation du bouton PayPal...");
+        
+        if (!paypal) {
+          console.error("PayPal n'a pas été chargé correctement");
+          app.showAlert("Erreur lors du chargement de PayPal. Veuillez réessayer.", "error");
+          return;
+        }
+        
+        // Vérifier que le nom d'utilisateur est fourni avant de créer le bouton
+        const checkUsername = () => {
+          const username = document.getElementById('social-username').value;
+          if (!username || username.trim() === '') {
+            app.showAlert('Veuillez fournir un nom d\'utilisateur ou un lien de profil', 'error');
+            return false;
+          }
+          return true;
+        };
+        
+        // Créer le bouton PayPal
+        const buttons = paypal.Buttons({
           fundingSource: paypal.FUNDING.PAYPAL,
           style: {
             layout: 'vertical',
-            color: 'blue',
+            color: 'gold',
             shape: 'rect',
-            label: 'pay'
+            label: 'paypal',
+            height: 40
           },
           createOrder: function(data, actions) {
             // Vérifier à nouveau que le nom d'utilisateur est fourni
-            const username = document.getElementById('social-username').value;
-            if (!username) {
-              app.showAlert('Veuillez fournir un nom d\'utilisateur ou un lien de profil', 'error');
+            if (!checkUsername()) {
               return Promise.reject(new Error('Nom d\'utilisateur manquant'));
             }
+            
+            const username = document.getElementById('social-username').value;
+            console.log("Création de la commande PayPal pour:", username);
             
             return actions.order.create({
               purchase_units: [{
@@ -357,6 +369,8 @@
             });
           },
           onApprove: function(data, actions) {
+            console.log("Paiement PayPal approuvé, capture en cours...");
+            
             // Afficher le modal de traitement
             document.getElementById('payment-processing-modal').classList.remove('hidden');
             document.getElementById('checkout-modal').classList.add('hidden');
@@ -384,9 +398,17 @@
             // Masquer le modal de traitement s'il est affiché
             document.getElementById('payment-processing-modal').classList.add('hidden');
           }
-        }).render('#paypal-button-container');
+        });
         
-        paypalButtonRendered = true;
+        // Vérifier si le bouton peut être rendu
+        console.log("Rendu du bouton PayPal...");
+        buttons.render('#paypal-button-container').then(() => {
+          console.log("Bouton PayPal rendu avec succès");
+          paypalButtonRendered = true;
+        }).catch(err => {
+          console.error("Erreur lors du rendu du bouton PayPal:", err);
+          app.showAlert("Erreur lors du chargement du bouton PayPal. Veuillez réessayer.", "error");
+        });
       } catch (error) {
         console.error('Erreur lors de l\'initialisation du bouton PayPal:', error);
         app.showAlert('Erreur lors de l\'initialisation du paiement PayPal. Veuillez réessayer.', 'error');

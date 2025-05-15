@@ -7,12 +7,12 @@ payment.config = {
   stripe: {
     publicKey: 'pk_test_TYooMQauvdEDq54NiTphI7jx',  // Clé de test Stripe
     currency: 'eur',
-    merchantEmail: 'yns212erie@gmail.com'  // Email du marchand pour recevoir les notifications
+    merchantEmail: 'bakalaw900@gmail.com'  // Email du marchand pour recevoir les notifications
   },
   paypal: {
-    clientId: 'sb',  // Clé de test PayPal (sandbox)
+    clientId: 'AcMLjSgGyLGagMwavtSS6QdtomOgyKe2T9mGyBGwWYu81sMhT0KZyIFEDAA1CX5-X_fHk7ZoAXSk58wz',  // Clé de test PayPal (sandbox)
     currency: 'EUR',
-    merchantEmail: 'yns212erie@gmail.com'  // Email PayPal du marchand pour recevoir les paiements
+    merchantEmail: 'bakalaw900@gmail.com'  // Email PayPal du marchand pour recevoir les paiements
   }
 };
 

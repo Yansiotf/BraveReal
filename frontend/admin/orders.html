@@ -14,6 +14,9 @@
     .status-pending {
       @apply bg-yellow-100 text-yellow-800;
     }
+    .status-validated {
+      @apply bg-purple-100 text-purple-800;
+    }
     .status-processing {
       @apply bg-blue-100 text-blue-800;
     }
@@ -541,6 +544,9 @@
           case 'en attente':
             statusClass = 'status-badge status-pending';
             break;
+          case 'validée':
+            statusClass = 'status-badge status-validated';
+            break;
           case 'en cours':
             statusClass = 'status-badge status-processing';
             break;
@@ -604,6 +610,11 @@
       });
       
       // Boutons d'action
+      document.getElementById('validate-order').addEventListener('click', () => {
+        const orderId = document.getElementById('modal-order-id').textContent;
+        updateOrderStatus(orderId, 'Validée');
+      });
+      
       document.getElementById('cancel-order').addEventListener('click', () => {
         const orderId = document.getElementById('modal-order-id').textContent;
         updateOrderStatus(orderId, 'Annulée');
@@ -756,17 +767,22 @@
         `;
         
         // Afficher/masquer les boutons d'action en fonction du statut
+        const validateOrderBtn = document.getElementById('validate-order');
         const cancelOrderBtn = document.getElementById('cancel-order');
         const processOrderBtn = document.getElementById('process-order');
         const completeOrderBtn = document.getElementById('complete-order');
         
         // Réinitialiser les boutons
+        validateOrderBtn.classList.add('hidden');
         cancelOrderBtn.classList.add('hidden');
         processOrderBtn.classList.add('hidden');
         completeOrderBtn.classList.add('hidden');
         
         // Afficher les boutons appropriés
         if (order.status === 'En attente') {
+          validateOrderBtn.classList.remove('hidden');
+          cancelOrderBtn.classList.remove('hidden');
+        } else if (order.status === 'Validée') {
           cancelOrderBtn.classList.remove('hidden');
           processOrderBtn.classList.remove('hidden');
         } else if (order.status === 'En cours') {
