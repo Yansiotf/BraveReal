@@ -387,32 +387,62 @@
         const cart = JSON.parse(localStorage.getItem('cartItems')) || [];
         const totalAmount = cart.reduce((total, item) => total + (item.price * item.qty), 0);
         
-        // Rendre le bouton PayPal
-        await payment.renderPayPalButton('paypal-button-container', {
-          amount: totalAmount,
-          description: 'Commande BraveSMM'
-        });
+        // Vérifier que le nom d'utilisateur est fourni
+        const socialUsername = document.getElementById('social-username').value;
+        if (!socialUsername) {
+          app.showAlert('Veuillez fournir un nom d\'utilisateur ou un lien de profil', 'error');
+          return;
+        }
         
-        // Le bouton PayPal est maintenant configuré via payment.renderPayPalButton
-        // Nous n'avons pas besoin de le configurer à nouveau ici
+        // Rendre le bouton PayPal
+        const paypal = await payment.initPayPal();
+        
+        // Vider le conteneur avant de rendre le bouton
+        const container = document.getElementById('paypal-button-container');
+        if (container) {
+          container.innerHTML = '';
+        }
+        
+        paypal.Buttons({
+          fundingSource: paypal.FUNDING.PAYPAL,
+          style: {
+            layout: 'vertical',
+            color: 'blue',
+            shape: 'rect',
+            label: 'pay'
+          },
+          createOrder: function(data, actions) {
+            return actions.order.create({
+              purchase_units: [{
+                amount: {
+                  value: totalAmount.toFixed(2),
+                  currency_code: 'EUR'
+                },
+                description: 'Commande BraveSMM'
+              }]
+            });
+          },
+          onApprove: function(data, actions) {
+            // Afficher le modal de traitement
+            document.getElementById('payment-processing-modal').classList.remove('hidden');
+            document.getElementById('checkout-modal').classList.add('hidden');
+            
+            return actions.order.capture().then(function(details) {
+              // Traiter la commande avec PayPal
+              processOrder(socialUsername, 'paypal', {
+                paymentId: details.id || 'pp_' + Date.now(),
+                payerEmail: details.payer ? details.payer.email_address : 'client@example.com',
+                paymentMethod: 'paypal'
+              });
+            });
+          },
+          onError: function(err) {
+            console.error('Erreur PayPal:', err);
+            app.showAlert('Erreur lors du paiement PayPal. Veuillez réessayer.', 'error');
+          }
+        }).render('#paypal-button-container');
         
         paypalButtonRendered = true;
-        
-        // Ajouter un gestionnaire d'événements pour le bouton PayPal
-        const paypalContainer = document.getElementById('paypal-button-container');
-        if (paypalContainer) {
-          paypalContainer.addEventListener('click', function() {
-            // Récupérer le nom d'utilisateur pour le traitement ultérieur
-            const socialUsername = document.getElementById('social-username').value;
-            if (!socialUsername) {
-              app.showAlert('Veuillez fournir un nom d\'utilisateur ou un lien de profil', 'error');
-              return;
-            }
-            
-            // Le traitement réel sera géré par le callback onApprove de PayPal
-            localStorage.setItem('pendingSocialUsername', socialUsername);
-          });
-        }
       } catch (error) {
         console.error('Erreur lors de l\'initialisation du bouton PayPal:', error);
         app.showAlert('Erreur lors de l\'initialisation du paiement PayPal. Veuillez réessayer.', 'error');
@@ -433,6 +463,12 @@
           return;
         }
         
+        // Vérifier que le nom d'utilisateur est fourni
+        if (!socialUsername || socialUsername.trim() === '') {
+          app.showAlert('Veuillez fournir un nom d\'utilisateur ou un lien de profil', 'error');
+          return;
+        }
+        
         // Afficher le modal de traitement
         document.getElementById('payment-processing-modal').classList.remove('hidden');
         document.getElementById('checkout-modal').classList.add('hidden');
@@ -442,7 +478,7 @@
           const result = await payment.processStripePayment(stripeSession, cardholderName);
           
           if (result.success) {
-            // Traiter la commande avec Stripe
+            // Traiter la commande avec Stripe uniquement si le paiement est réussi
             processOrder(socialUsername, 'stripe', {
               paymentId: result.paymentId,
               cardholderName: cardholderName
@@ -472,6 +508,16 @@
     // Traiter la commande après paiement
     async function processOrder(socialUsername, paymentMethod, paymentDetails) {
       try {
+        // Vérifier que le nom d'utilisateur est fourni
+        if (!socialUsername || socialUsername.trim() === '') {
+          throw new Error('Veuillez fournir un nom d\'utilisateur ou un lien de profil');
+        }
+        
+        // Vérifier que les détails de paiement sont fournis
+        if (!paymentDetails || !paymentDetails.paymentId) {
+          throw new Error('Informations de paiement manquantes');
+        }
+        
         // Calculer le montant total
         const cart = JSON.parse(localStorage.getItem('cartItems')) || [];
         const totalAmount = cart.reduce((total, item) => total + (item.price * item.qty), 0);
@@ -487,6 +533,8 @@
           timestamp: new Date().toISOString()
         };
         
+        console.log('Traitement de la commande avec paiement:', paymentInfo);
+        
         // Passer la commande avec les informations de paiement
         if (typeof app.placeOrder === 'function') {
           await app.placeOrder(socialUsername, paymentInfo);
@@ -496,10 +544,13 @@
         }
       } catch (error) {
         console.error('Erreur lors du traitement de la commande:', error);
-        app.showAlert('Erreur lors de la commande. Veuillez réessayer.', 'error');
+        app.showAlert('Erreur lors de la commande: ' + error.message, 'error');
         
         // Masquer le modal de traitement
         document.getElementById('payment-processing-modal').classList.add('hidden');
+        
+        // Réafficher le modal de paiement
+        document.getElementById('checkout-modal').classList.remove('hidden');
       }
     }
     

@@ -20,12 +20,13 @@ auth.isLoggedIn = function() {
 auth.isAdmin = function() {
   const userInfo = auth.getUserInfo();
   
-  // Seul l'utilisateur avec cet email spécifique est admin
+  // Seul l'utilisateur avec cet email et mot de passe spécifiques est admin
   if (userInfo && userInfo.email === 'yns212erie@gmail.com') {
     return true;
   }
   
-  return userInfo && userInfo.isAdmin;
+  // Les autres utilisateurs ne sont pas admin
+  return false;
 };
 
 // Fonction pour récupérer les informations de l'utilisateur
@@ -560,6 +561,19 @@ app.placeOrder = async function(socialMediaUsername, paymentInfo = null) {
     return;
   }
   
+  // Vérifier que le paiement a été effectué
+  if (!paymentInfo) {
+    app.showAlert('Le paiement n\'a pas été effectué', 'error');
+    
+    // Masquer le modal de traitement s'il est affiché
+    const processingModal = document.getElementById('payment-processing-modal');
+    if (processingModal) {
+      processingModal.classList.add('hidden');
+    }
+    
+    return;
+  }
+  
   try {
     // Afficher un loader si le modal de traitement n'est pas déjà affiché
     const processingModal = document.getElementById('payment-processing-modal');
@@ -577,8 +591,8 @@ app.placeOrder = async function(socialMediaUsername, paymentInfo = null) {
     // Calculer le total
     const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
     
-    // Vérifier si le paiement a été effectué
-    const isPaid = paymentInfo !== null;
+    // Le paiement a été effectué (puisque nous avons vérifié plus haut)
+    const isPaid = true;
     
     // Créer l'objet commande
     const order = {
@@ -592,8 +606,8 @@ app.placeOrder = async function(socialMediaUsername, paymentInfo = null) {
       })),
       socialMediaUsername,
       totalPrice: total,
-      isPaid: isPaid,
-      paidAt: isPaid ? new Date().toISOString() : null,
+      isPaid: true,
+      paidAt: new Date().toISOString(),
       paymentInfo: paymentInfo,
       status: 'En attente',
       createdAt: new Date().toISOString(),

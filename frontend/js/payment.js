@@ -161,11 +161,23 @@ payment.processStripePayment = async function(sessionData, cardholderName) {
     // Simuler un délai de traitement
     await new Promise(resolve => setTimeout(resolve, 1500));
     
+    // Vérifier que la carte a été saisie
+    const cardElement = document.getElementById('stripe-card-element');
+    if (!cardElement || cardElement.innerHTML === '') {
+      throw new Error("Veuillez saisir les informations de votre carte");
+    }
+    
+    // Vérifier que le nom du titulaire a été saisi
+    if (!cardholderName || cardholderName.trim() === '') {
+      throw new Error("Veuillez saisir le nom du titulaire de la carte");
+    }
+    
     // Simuler une réponse de paiement réussie
     return {
       success: true,
       paymentId: 'pi_' + Date.now(),
-      paymentMethod: 'stripe'
+      paymentMethod: 'stripe',
+      cardholderName: cardholderName
     };
   } catch (error) {
     console.error('Erreur lors du traitement du paiement Stripe:', error);
