@@ -31,6 +31,16 @@ app.use((req, res, next) => {
   next();
 });
 
+// Middleware pour gérer les erreurs CORS
+app.use((err, req, res, next) => {
+  if (err.name === 'UnauthorizedError') {
+    return res.status(401).json({ message: 'Token invalide' });
+  }
+  
+  console.error(err.stack);
+  res.status(500).json({ message: 'Erreur serveur' });
+});
+
 // Routes API
 app.use('/api/products', require('./backend/routes/productRoutes'));
 app.use('/api/categories', require('./backend/routes/categoryRoutes'));
@@ -52,4 +62,14 @@ app.get('/admin*', (req, res) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Serveur démarré en mode ${process.env.NODE_ENV} sur le port ${PORT}`);
+  
+  // Vérifier si la base de données doit être initialisée
+  if (process.env.INIT_DB === 'true') {
+    console.log('Initialisation de la base de données...');
+    try {
+      require('./init-db');
+    } catch (error) {
+      console.error('Erreur lors de l\'initialisation de la base de données:', error);
+    }
+  }
 });

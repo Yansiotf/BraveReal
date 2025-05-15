@@ -150,6 +150,7 @@ body {
   height: 30px;
   animation: spin 1s linear infinite;
   margin: 20px auto;
+  display: block !important;
 }
 
 @keyframes spin {

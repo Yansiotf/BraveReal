@@ -10,7 +10,8 @@
     "dev-full": "concurrently \"npm run dev\" \"npm run client\"",
     "data:import": "node backend/data/seeder",
     "data:destroy": "node backend/data/seeder -d",
-    "build": "echo 'No build step needed for static frontend'"
+    "build": "echo 'No build step needed for static frontend'",
+    "init-db": "node init-db.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

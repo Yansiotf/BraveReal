@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Boutique - BraveSMM</title>
+  <title>À propos - BraveSMM</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link rel="stylesheet" href="css/styles.css">
@@ -16,8 +16,8 @@
       
       <div class="hidden md:flex space-x-6">
         <a href="index.html" class="text-gray-700 hover:text-blue-600">Accueil</a>
-        <a href="shop.html" class="text-gray-700 hover:text-blue-600 font-bold">Boutique</a>
-        <a href="about.html" class="text-gray-700 hover:text-blue-600">À propos</a>
+        <a href="shop.html" class="text-gray-700 hover:text-blue-600">Boutique</a>
+        <a href="about.html" class="text-gray-700 hover:text-blue-600 font-bold">À propos</a>
         <a href="#" class="text-gray-700 hover:text-blue-600">Contact</a>
       </div>
       
@@ -53,31 +53,69 @@
       </div>
     </nav>
     
-    <div id="mobile-menu" class="hidden md:hidden px-4 py-2 bg-gray-50">
+    <div id="mobile-menu" class="hidden md:hidden px-4 py-2 bg-gray-50 shadow-inner">
       <a href="index.html" class="block py-2 text-gray-700">Accueil</a>
-      <a href="shop.html" class="block py-2 text-gray-700 font-bold">Boutique</a>
-      <a href="about.html" class="block py-2 text-gray-700">À propos</a>
+      <a href="shop.html" class="block py-2 text-gray-700">Boutique</a>
+      <a href="about.html" class="block py-2 text-gray-700 font-medium">À propos</a>
       <a href="#" class="block py-2 text-gray-700">Contact</a>
     </div>
   </header>
 
   <!-- Main Content -->
-  <main class="flex-grow container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-8 text-center">Nos services</h1>
-    
-    <!-- Categories Filter -->
-    <div class="mb-8">
-      <h2 class="text-xl font-bold mb-4">Catégories</h2>
-      <div id="categories-container" class="flex flex-wrap">
-        <!-- Categories will be loaded here -->
-        <div class="loader"></div>
+  <main class="container mx-auto px-4 py-8 flex-grow">
+    <div class="max-w-4xl mx-auto">
+      <h1 class="text-3xl font-bold mb-6 text-center">À propos de BraveSMM</h1>
+      
+      <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-xl font-bold mb-4">Notre mission</h2>
+        <p class="mb-4">BraveSMM a été créé avec une mission claire : aider les particuliers, les créateurs de contenu et les entreprises à développer leur présence sur les réseaux sociaux de manière efficace et abordable.</p>
+        <p class="mb-4">Dans un monde où la visibilité en ligne est devenue essentielle, nous proposons des services de qualité pour augmenter votre audience, votre engagement et votre crédibilité sur les principales plateformes sociales.</p>
       </div>
-    </div>
-    
-    <!-- Products Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="products-container">
-      <!-- Products will be loaded here -->
-      <div class="loader col-span-full mx-auto"></div>
+      
+      <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-xl font-bold mb-4">Nos valeurs</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h3 class="text-lg font-semibold mb-2 flex items-center">
+              <i class="fas fa-check-circle text-green-500 mr-2"></i>
+              Qualité
+            </h3>
+            <p>Nous nous engageons à fournir des services de haute qualité qui apportent une réelle valeur à votre présence en ligne.</p>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold mb-2 flex items-center">
+              <i class="fas fa-lock text-green-500 mr-2"></i>
+              Sécurité
+            </h3>
+            <p>La sécurité de vos comptes est notre priorité. Nos méthodes respectent les conditions d'utilisation des plateformes.</p>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold mb-2 flex items-center">
+              <i class="fas fa-bolt text-green-500 mr-2"></i>
+              Rapidité
+            </h3>
+            <p>Nous comprenons l'importance de la réactivité. Nos services sont livrés dans les délais les plus courts possibles.</p>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold mb-2 flex items-center">
+              <i class="fas fa-headset text-green-500 mr-2"></i>
+              Support
+            </h3>
+            <p>Notre équipe de support est disponible pour répondre à vos questions et vous aider à chaque étape.</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-bold mb-4">Notre équipe</h2>
+        <p class="mb-6">BraveSMM est composé d'une équipe de professionnels passionnés par les médias sociaux et le marketing digital. Nous suivons constamment les dernières tendances et meilleures pratiques pour vous offrir des services à la pointe.</p>
+        
+        <div class="text-center">
+          <a href="contact.html" class="btn-primary inline-block">
+            <i class="fas fa-envelope mr-2"></i> Contactez-nous
+          </a>
+        </div>
+      </div>
     </div>
   </main>
 
@@ -134,12 +172,6 @@
       
       // Setup mobile menu
       auth.setupMobileMenu();
-      
-      // Load categories
-      app.loadCategories();
-      
-      // Load products
-      app.loadProducts();
       
       // Update cart count
       app.updateCartCount();
