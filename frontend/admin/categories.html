@@ -10,10 +10,53 @@
   <style>
     .category-card {
       transition: all 0.3s ease;
+      border-radius: var(--card-border-radius, 0.5rem);
     }
     .category-card:hover {
       transform: translateY(-5px);
       box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      border-color: rgba(124, 58, 237, 0.2);
+    }
+    
+    .btn-secondary {
+      background-color: #f3f4f6;
+      color: #374151;
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #e5e7eb;
+    }
+    
+    .btn-secondary:hover {
+      background-color: #e5e7eb;
+      color: #111827;
+    }
+    
+    .btn-danger {
+      background-color: #fee2e2;
+      color: #b91c1c;
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #fecaca;
+    }
+    
+    .btn-danger:hover {
+      background-color: #fecaca;
+      color: #991b1b;
+    }
+    
+    .btn-sm {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.875rem;
     }
   </style>
 </head>
@@ -323,9 +366,9 @@
         if (category.image) {
           imageHtml = `<img src="${category.image}" alt="${category.name}" class="w-full h-full object-cover">`;
         } else if (category.icon) {
-          imageHtml = `<div class="flex items-center justify-center h-full"><i class="${category.icon} text-6xl text-blue-600"></i></div>`;
+          imageHtml = `<div class="flex items-center justify-center h-full"><i class="${category.icon} text-6xl text-violet-600"></i></div>`;
         } else {
-          imageHtml = `<div class="flex items-center justify-center h-full"><i class="fas fa-tag text-6xl text-blue-600"></i></div>`;
+          imageHtml = `<div class="flex items-center justify-center h-full"><i class="fas fa-tag text-6xl text-violet-600"></i></div>`;
         }
         
         categoryCard.innerHTML = `
@@ -336,10 +379,10 @@
             <h3 class="font-bold text-lg mb-2">${category.name}</h3>
             <p class="text-gray-600 text-sm mb-4 line-clamp-2">${category.description || 'Aucune description'}</p>
             <div class="flex justify-end space-x-2">
-              <button class="edit-category btn-secondary btn-sm" data-id="${category._id}">
+              <button class="edit-category btn-secondary btn-sm" data-id="${category._id}" onclick="openCategoryModal('${category._id}'); return false;">
                 <i class="fas fa-edit mr-1"></i> Modifier
               </button>
-              <button class="delete-category btn-danger btn-sm" data-id="${category._id}">
+              <button class="delete-category btn-danger btn-sm" data-id="${category._id}" onclick="openDeleteModal('${category._id}'); return false;">
                 <i class="fas fa-trash-alt mr-1"></i> Supprimer
               </button>
             </div>
@@ -347,21 +390,6 @@
         `;
         
         container.appendChild(categoryCard);
-      });
-      
-      // Ajouter les écouteurs d'événements pour les boutons
-      document.querySelectorAll('.edit-category').forEach(button => {
-        button.addEventListener('click', () => {
-          const categoryId = button.getAttribute('data-id');
-          openCategoryModal(categoryId);
-        });
-      });
-      
-      document.querySelectorAll('.delete-category').forEach(button => {
-        button.addEventListener('click', () => {
-          const categoryId = button.getAttribute('data-id');
-          openDeleteModal(categoryId);
-        });
       });
     }
     
@@ -387,6 +415,23 @@
       
       // Confirmation de suppression
       document.getElementById('confirm-delete').addEventListener('click', deleteCategory);
+      
+      // Ajouter les écouteurs d'événements pour les boutons d'édition et de suppression existants
+      document.querySelectorAll('.edit-category').forEach(button => {
+        button.addEventListener('click', (e) => {
+          e.preventDefault();
+          const categoryId = button.getAttribute('data-id');
+          openCategoryModal(categoryId);
+        });
+      });
+      
+      document.querySelectorAll('.delete-category').forEach(button => {
+        button.addEventListener('click', (e) => {
+          e.preventDefault();
+          const categoryId = button.getAttribute('data-id');
+          openDeleteModal(categoryId);
+        });
+      });
     }
     
     // Ouvrir le modal de catégorie

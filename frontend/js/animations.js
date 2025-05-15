@@ -48,8 +48,11 @@ document.addEventListener('DOMContentLoaded', function() {
       const elementPosition = element.getBoundingClientRect().top;
       const windowHeight = window.innerHeight;
       
-      if (elementPosition < windowHeight - 50) {
-        element.classList.add('fade-in');
+      if (elementPosition < windowHeight * 0.85) {
+        // Ajouter différentes animations selon les attributs data
+        const animationType = element.getAttribute('data-animation') || 'fade-in';
+        element.classList.add(animationType);
+        element.style.opacity = 1;
       }
     });
   };
