@@ -116,29 +116,6 @@
   </footer>
 
   <!-- Scripts -->
-  <script src="js/auth.js"></script>
-  <script src="js/main.js"></script>
-  <script>
-    // Initialize the page
-    document.addEventListener('DOMContentLoaded', () => {
-      // Check if user is logged in
-      if (!auth.isLoggedIn()) {
-        window.location.href = 'login.html?redirect=orders.html';
-        return;
-      }
-      
-      // Setup user menu
-      auth.setupUserMenu();
-      
-      // Setup mobile menu
-      auth.setupMobileMenu();
-      
-      // Load orders
-      app.loadUserOrders();
-      
-      // Update cart count
-      app.updateCartCount();
-    });
-  </script>
+  <script src="js/unified.js"></script>
 </body>
 </html>

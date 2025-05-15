@@ -534,6 +534,371 @@ app.removeCartItem = function(id) {
   app.showAlert('Article supprimé du panier', 'info');
 };
 
+// Fonction pour passer une commande
+app.placeOrder = async function(socialMediaUsername) {
+  if (!auth.isLoggedIn()) {
+    app.showAlert('Veuillez vous connecter pour passer une commande', 'error');
+    window.location.href = 'login.html';
+    return;
+  }
+  
+  const cart = JSON.parse(localStorage.getItem('cartItems')) || [];
+  
+  if (cart.length === 0) {
+    app.showAlert('Votre panier est vide', 'error');
+    return;
+  }
+  
+  if (!socialMediaUsername) {
+    app.showAlert('Veuillez fournir un nom d\'utilisateur ou un lien de profil', 'error');
+    return;
+  }
+  
+  try {
+    // Afficher un loader
+    const checkoutButton = document.getElementById('checkout-button');
+    if (checkoutButton) {
+      checkoutButton.disabled = true;
+      checkoutButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Traitement...';
+    }
+    
+    // Simuler un délai de traitement
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Créer un ID de commande unique
+    const orderId = 'ORD' + Date.now();
+    
+    // Calculer le total
+    const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    
+    // Créer l'objet commande
+    const order = {
+      _id: orderId,
+      user: auth.getUserInfo()._id,
+      orderItems: cart.map(item => ({
+        ...item,
+        product: item._id
+      })),
+      socialMediaUsername,
+      totalPrice: total,
+      isPaid: true,
+      paidAt: new Date().toISOString(),
+      status: 'En attente',
+      createdAt: new Date().toISOString()
+    };
+    
+    // Stocker la commande dans le localStorage pour la démo
+    const orders = JSON.parse(localStorage.getItem('orders')) || [];
+    orders.push(order);
+    localStorage.setItem('orders', JSON.stringify(orders));
+    
+    // Vider le panier
+    localStorage.removeItem('cartItems');
+    
+    // Rediriger vers la page de confirmation
+    window.location.href = `order-confirmation.html?id=${orderId}`;
+  } catch (error) {
+    console.error('Erreur lors de la commande:', error);
+    app.showAlert(error.message || 'Erreur lors de la commande', 'error');
+  }
+};
+
+// Fonction pour charger les commandes de l'utilisateur
+app.loadUserOrders = function() {
+  if (!auth.isLoggedIn()) {
+    window.location.href = 'login.html';
+    return;
+  }
+  
+  const ordersContainer = document.getElementById('orders-container');
+  const loadingElement = document.getElementById('orders-loading');
+  
+  if (!ordersContainer) return;
+  
+  try {
+    // Afficher le loader
+    if (loadingElement) {
+      loadingElement.classList.remove('hidden');
+    }
+    
+    // Récupérer les commandes depuis le localStorage
+    const allOrders = JSON.parse(localStorage.getItem('orders')) || [];
+    const userInfo = auth.getUserInfo();
+    
+    // Filtrer les commandes de l'utilisateur
+    const userOrders = allOrders.filter(order => order.user === userInfo._id);
+    
+    // Masquer le loader
+    if (loadingElement) {
+      loadingElement.classList.add('hidden');
+    }
+    
+    if (userOrders.length === 0) {
+      ordersContainer.innerHTML = `
+        <div class="text-center py-8">
+          <i class="fas fa-shopping-bag text-gray-300 text-5xl mb-4"></i>
+          <h2 class="text-xl font-bold mb-2">Aucune commande</h2>
+          <p class="text-gray-600 mb-4">Vous n'avez pas encore passé de commande.</p>
+          <a href="shop.html" class="btn-primary">
+            <i class="fas fa-shopping-cart mr-2"></i> Parcourir la boutique
+          </a>
+        </div>
+      `;
+      return;
+    }
+    
+    // Trier les commandes par date (la plus récente en premier)
+    userOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    // Afficher les commandes
+    ordersContainer.innerHTML = '';
+    
+    userOrders.forEach(order => {
+      const orderDate = new Date(order.createdAt).toLocaleDateString('fr-FR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+      
+      const orderCard = document.createElement('div');
+      orderCard.className = 'bg-white rounded-lg shadow-md p-6 mb-4';
+      
+      let statusClass = '';
+      switch (order.status.toLowerCase()) {
+        case 'en attente':
+          statusClass = 'bg-yellow-100 text-yellow-800';
+          break;
+        case 'en cours':
+          statusClass = 'bg-blue-100 text-blue-800';
+          break;
+        case 'terminée':
+          statusClass = 'bg-green-100 text-green-800';
+          break;
+        case 'annulée':
+          statusClass = 'bg-red-100 text-red-800';
+          break;
+        default:
+          statusClass = 'bg-gray-100 text-gray-800';
+      }
+      
+      orderCard.innerHTML = `
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+          <div>
+            <h3 class="text-lg font-bold">${order._id}</h3>
+            <p class="text-gray-600">Commandé le ${orderDate}</p>
+          </div>
+          <div class="mt-2 md:mt-0">
+            <span class="px-3 py-1 rounded-full text-sm font-medium ${statusClass}">
+              ${order.status}
+            </span>
+          </div>
+        </div>
+        
+        <div class="border-t border-gray-200 pt-4">
+          <p class="mb-2"><span class="font-medium">Profil :</span> ${order.socialMediaUsername}</p>
+          <p class="mb-4"><span class="font-medium">Total :</span> ${order.totalPrice.toFixed(2)} €</p>
+          
+          <a href="order-details.html?id=${order._id}" class="btn-primary inline-block">
+            <i class="fas fa-eye mr-2"></i> Voir les détails
+          </a>
+        </div>
+      `;
+      
+      ordersContainer.appendChild(orderCard);
+    });
+  } catch (error) {
+    console.error('Erreur lors du chargement des commandes:', error);
+    
+    if (loadingElement) {
+      loadingElement.classList.add('hidden');
+    }
+    
+    ordersContainer.innerHTML = `
+      <div class="text-center py-8">
+        <i class="fas fa-exclamation-circle text-red-500 text-5xl mb-4"></i>
+        <h2 class="text-xl font-bold mb-2">Erreur</h2>
+        <p class="text-gray-600 mb-4">Une erreur est survenue lors du chargement de vos commandes.</p>
+        <button class="btn-primary" onclick="app.loadUserOrders()">
+          <i class="fas fa-sync-alt mr-2"></i> Réessayer
+        </button>
+      </div>
+    `;
+  }
+};
+
+// Fonction pour charger les détails d'une commande
+app.loadOrderDetails = function(orderId) {
+  if (!auth.isLoggedIn()) {
+    window.location.href = 'login.html';
+    return;
+  }
+  
+  if (!orderId) {
+    window.location.href = 'orders.html';
+    return;
+  }
+  
+  const orderDetailsContainer = document.getElementById('order-details-container');
+  const loadingElement = document.getElementById('order-loading');
+  
+  if (!orderDetailsContainer) return;
+  
+  try {
+    // Afficher le loader
+    if (loadingElement) {
+      loadingElement.classList.remove('hidden');
+    }
+    
+    // Récupérer les commandes depuis le localStorage
+    const allOrders = JSON.parse(localStorage.getItem('orders')) || [];
+    
+    // Trouver la commande correspondante
+    const order = allOrders.find(order => order._id === orderId);
+    
+    // Masquer le loader
+    if (loadingElement) {
+      loadingElement.classList.add('hidden');
+    }
+    
+    if (!order) {
+      orderDetailsContainer.innerHTML = `
+        <div class="text-center py-8">
+          <i class="fas fa-exclamation-circle text-red-500 text-5xl mb-4"></i>
+          <h2 class="text-xl font-bold mb-2">Commande introuvable</h2>
+          <p class="text-gray-600 mb-4">La commande que vous recherchez n'existe pas.</p>
+          <a href="orders.html" class="btn-primary">
+            <i class="fas fa-arrow-left mr-2"></i> Retour aux commandes
+          </a>
+        </div>
+      `;
+      return;
+    }
+    
+    // Formater les dates
+    const orderDate = new Date(order.createdAt).toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    
+    let paidDate = 'Non payé';
+    if (order.isPaid && order.paidAt) {
+      paidDate = new Date(order.paidAt).toLocaleDateString('fr-FR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+    
+    // Déterminer la classe de statut
+    let statusClass = '';
+    switch (order.status.toLowerCase()) {
+      case 'en attente':
+        statusClass = 'bg-yellow-100 text-yellow-800';
+        break;
+      case 'en cours':
+        statusClass = 'bg-blue-100 text-blue-800';
+        break;
+      case 'terminée':
+        statusClass = 'bg-green-100 text-green-800';
+        break;
+      case 'annulée':
+        statusClass = 'bg-red-100 text-red-800';
+        break;
+      default:
+        statusClass = 'bg-gray-100 text-gray-800';
+    }
+    
+    // Afficher les détails de la commande
+    orderDetailsContainer.innerHTML = `
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+          <div>
+            <h2 class="text-2xl font-bold">Commande ${order._id}</h2>
+            <p class="text-gray-600">Passée le ${orderDate}</p>
+          </div>
+          <div class="mt-2 md:mt-0">
+            <span class="px-3 py-1 rounded-full text-sm font-medium ${statusClass}">
+              ${order.status}
+            </span>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <h3 class="text-lg font-bold mb-2">Informations</h3>
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <p class="mb-2"><span class="font-medium">Profil :</span> ${order.socialMediaUsername}</p>
+              <p class="mb-2"><span class="font-medium">Statut de paiement :</span> ${order.isPaid ? 'Payé' : 'Non payé'}</p>
+              <p><span class="font-medium">Date de paiement :</span> ${paidDate}</p>
+            </div>
+          </div>
+          
+          <div>
+            <h3 class="text-lg font-bold mb-2">Résumé</h3>
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <div class="flex justify-between mb-2">
+                <span>Articles (${order.orderItems.reduce((total, item) => total + item.qty, 0)})</span>
+                <span>${order.totalPrice.toFixed(2)} €</span>
+              </div>
+              <div class="border-t border-gray-200 my-2 pt-2 font-bold flex justify-between">
+                <span>Total</span>
+                <span>${order.totalPrice.toFixed(2)} €</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <h3 class="text-lg font-bold mb-2">Articles commandés</h3>
+        <div class="bg-gray-50 p-4 rounded-lg mb-6">
+          ${order.orderItems.map(item => `
+            <div class="flex items-center py-3 ${order.orderItems.indexOf(item) !== order.orderItems.length - 1 ? 'border-b border-gray-200' : ''}">
+              <div class="flex-grow">
+                <h4 class="font-medium">${item.name}</h4>
+                <p class="text-gray-600">${item.price.toFixed(2)} € x ${item.qty}</p>
+              </div>
+              <div class="font-bold">
+                ${(item.price * item.qty).toFixed(2)} €
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        
+        <div class="flex justify-between">
+          <a href="orders.html" class="btn-secondary">
+            <i class="fas fa-arrow-left mr-2"></i> Retour aux commandes
+          </a>
+          
+          <a href="#" class="btn-primary" onclick="window.print(); return false;">
+            <i class="fas fa-print mr-2"></i> Imprimer
+          </a>
+        </div>
+      </div>
+    `;
+  } catch (error) {
+    console.error('Erreur lors du chargement des détails de la commande:', error);
+    
+    if (loadingElement) {
+      loadingElement.classList.add('hidden');
+    }
+    
+    orderDetailsContainer.innerHTML = `
+      <div class="text-center py-8">
+        <i class="fas fa-exclamation-circle text-red-500 text-5xl mb-4"></i>
+        <h2 class="text-xl font-bold mb-2">Erreur</h2>
+        <p class="text-gray-600 mb-4">Une erreur est survenue lors du chargement des détails de la commande.</p>
+        <button class="btn-primary" onclick="app.loadOrderDetails('${orderId}')">
+          <i class="fas fa-sync-alt mr-2"></i> Réessayer
+        </button>
+      </div>
+    `;
+  }
+};
+
 // Initialiser l'application
 document.addEventListener('DOMContentLoaded', () => {
   console.log('Application initialisée');
@@ -565,6 +930,19 @@ document.addEventListener('DOMContentLoaded', () => {
   // Charger le panier sur la page panier
   if (document.getElementById('cart-items')) {
     app.loadCart();
+  }
+  
+  // Charger les commandes de l'utilisateur
+  if (document.getElementById('orders-container')) {
+    app.loadUserOrders();
+  }
+  
+  // Charger les détails d'une commande
+  if (document.getElementById('order-details-container')) {
+    // Récupérer l'ID de la commande depuis l'URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const orderId = urlParams.get('id');
+    app.loadOrderDetails(orderId);
   }
   
   // Configurer le formulaire de contact
