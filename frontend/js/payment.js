@@ -97,13 +97,19 @@ payment.initPayPal = function() {
           }
         }, 100);
       } else {
-        // Charger le script
+        // Charger le script avec les options avancées
         const script = document.createElement('script');
-        script.src = `https://www.paypal.com/sdk/js?client-id=${payment.config.paypal.clientId}&currency=${payment.config.paypal.currency}`;
+        script.src = `https://www.paypal.com/sdk/js?client-id=${payment.config.paypal.clientId}&currency=${payment.config.paypal.currency}&intent=capture&commit=true`;
         script.async = true;
         
         script.onload = () => {
+          console.log('PayPal SDK chargé avec succès');
           resolve(window.paypal);
+        };
+        
+        script.onerror = (error) => {
+          console.error('Erreur lors du chargement du SDK PayPal:', error);
+          app.showAlert('Erreur lors du chargement de PayPal. Veuillez réessayer.', 'error');
         };
         
         document.head.appendChild(script);

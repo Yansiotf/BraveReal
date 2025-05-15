@@ -128,52 +128,23 @@
         </div>
         
         <div class="mb-4">
-          <label class="form-label">Méthode de paiement *</label>
-          <div class="mt-2 space-y-2">
+          <label class="form-label">Méthode de paiement</label>
+          <div class="mt-2 flex items-center">
             <div class="flex items-center">
-              <input type="radio" id="payment-stripe" name="payment-method" value="stripe" class="mr-2" checked>
-              <label for="payment-stripe" class="flex items-center">
-                <span class="mr-2">Carte bancaire</span>
-                <img src="https://cdn.jsdelivr.net/npm/simple-icons@v5/icons/visa.svg" alt="Visa" class="h-6 w-6 inline-block mr-1">
-                <img src="https://cdn.jsdelivr.net/npm/simple-icons@v5/icons/mastercard.svg" alt="Mastercard" class="h-6 w-6 inline-block mr-1">
-                <img src="https://cdn.jsdelivr.net/npm/simple-icons@v5/icons/americanexpress.svg" alt="American Express" class="h-6 w-6 inline-block">
-              </label>
-            </div>
-            <div class="flex items-center">
-              <input type="radio" id="payment-paypal" name="payment-method" value="paypal" class="mr-2">
-              <label for="payment-paypal" class="flex items-center">
-                <span class="mr-2">PayPal</span>
-                <img src="https://cdn.jsdelivr.net/npm/simple-icons@v5/icons/paypal.svg" alt="PayPal" class="h-6 w-6 inline-block">
-              </label>
+              <span class="mr-2">PayPal</span>
+              <img src="https://cdn.jsdelivr.net/npm/simple-icons@v5/icons/paypal.svg" alt="PayPal" class="h-6 w-6 inline-block">
             </div>
           </div>
-        </div>
-        
-        <!-- Formulaire de paiement Stripe -->
-        <div id="stripe-payment-form" class="mb-4 p-4 border border-gray-200 rounded-lg">
-          <div class="mb-4">
-            <label for="cardholder-name" class="form-label">Nom du titulaire de la carte *</label>
-            <input type="text" id="cardholder-name" class="form-input" placeholder="Nom complet" required>
-          </div>
-          <div class="mb-2">
-            <label class="form-label">Informations de carte *</label>
-            <div id="stripe-card-element" class="p-3 border border-gray-300 rounded-md bg-white"></div>
-            <div id="stripe-card-errors" class="text-red-500 text-sm mt-1"></div>
-          </div>
-          <p class="text-sm text-gray-500">Vos informations de paiement sont sécurisées.</p>
         </div>
         
         <!-- Formulaire de paiement PayPal -->
-        <div id="paypal-payment-form" class="mb-4 hidden">
+        <div id="paypal-payment-form" class="mb-4">
           <div id="paypal-button-container" class="mt-2"></div>
           <p class="text-sm text-gray-500 mt-2">Vous serez redirigé vers PayPal pour finaliser votre paiement.</p>
         </div>
         
         <div class="flex justify-between">
           <button type="button" id="cancel-checkout" class="btn-secondary">Annuler</button>
-          <button type="submit" id="stripe-submit-button" class="btn-primary">
-            <i class="fas fa-lock mr-2"></i> Payer maintenant
-          </button>
         </div>
       </form>
     </div>
@@ -317,65 +288,18 @@
       // Afficher le modal
       modal.classList.remove('hidden');
       
-      // Initialiser le formulaire de paiement par défaut (Stripe)
-      initializeStripeForm();
-      
-      // Afficher le formulaire de paiement par défaut
-      togglePaymentForms('stripe');
+      // Initialiser PayPal
+      initializePayPalButton();
     }
     
-    // Basculer entre les formulaires de paiement
-    function togglePaymentForms(method) {
-      const stripeForm = document.getElementById('stripe-payment-form');
-      const paypalForm = document.getElementById('paypal-payment-form');
-      const stripeSubmitButton = document.getElementById('stripe-submit-button');
-      
-      if (method === 'stripe') {
-        stripeForm.classList.remove('hidden');
-        paypalForm.classList.add('hidden');
-        stripeSubmitButton.classList.remove('hidden');
-        
-        // Initialiser Stripe si ce n'est pas déjà fait
-        initializeStripeForm();
-      } else if (method === 'paypal') {
-        stripeForm.classList.add('hidden');
-        paypalForm.classList.remove('hidden');
-        stripeSubmitButton.classList.add('hidden');
-        
-        // Initialiser PayPal si ce n'est pas déjà fait
-        initializePayPalButton();
-      }
+    // Fonction pour fermer le modal de paiement
+    function closeCheckoutModal() {
+      document.getElementById('checkout-modal').classList.add('hidden');
     }
     
-    // Initialiser le formulaire Stripe
-    async function initializeStripeForm() {
-      try {
-        // Calculer le montant total
-        const cart = JSON.parse(localStorage.getItem('cartItems')) || [];
-        const totalAmount = cart.reduce((total, item) => total + (item.price * item.qty), 0);
-        
-        // Créer une session Stripe
-        stripeSession = await payment.createStripeSession({
-          amount: totalAmount,
-          currency: 'eur',
-          description: 'Commande BraveSMM'
-        });
-        
-        // Afficher les erreurs de carte
-        const displayError = document.getElementById('stripe-card-errors');
-        if (stripeSession.card && displayError) {
-          stripeSession.card.addEventListener('change', function(event) {
-            if (event.error) {
-              displayError.textContent = event.error.message;
-            } else {
-              displayError.textContent = '';
-            }
-          });
-        }
-      } catch (error) {
-        console.error('Erreur lors de l\'initialisation du formulaire Stripe:', error);
-        app.showAlert('Erreur lors de l\'initialisation du paiement. Veuillez réessayer.', 'error');
-      }
+    // Fonction pour annuler le paiement
+    function cancelPayment() {
+      closeCheckoutModal();
     }
     
     // Initialiser le bouton PayPal
@@ -412,13 +336,23 @@
             label: 'pay'
           },
           createOrder: function(data, actions) {
+            // Vérifier à nouveau que le nom d'utilisateur est fourni
+            const username = document.getElementById('social-username').value;
+            if (!username) {
+              app.showAlert('Veuillez fournir un nom d\'utilisateur ou un lien de profil', 'error');
+              return Promise.reject(new Error('Nom d\'utilisateur manquant'));
+            }
+            
             return actions.order.create({
               purchase_units: [{
                 amount: {
                   value: totalAmount.toFixed(2),
                   currency_code: 'EUR'
                 },
-                description: 'Commande BraveSMM'
+                description: 'Commande BraveSMM',
+                payee: {
+                  email_address: payment.config.paypal.merchantEmail // Votre email PayPal pour recevoir les paiements
+                }
               }]
             });
           },
@@ -428,17 +362,27 @@
             document.getElementById('checkout-modal').classList.add('hidden');
             
             return actions.order.capture().then(function(details) {
+              console.log('Paiement PayPal réussi:', details);
+              
               // Traiter la commande avec PayPal
-              processOrder(socialUsername, 'paypal', {
+              const username = document.getElementById('social-username').value;
+              processOrder(username, 'paypal', {
                 paymentId: details.id || 'pp_' + Date.now(),
                 payerEmail: details.payer ? details.payer.email_address : 'client@example.com',
-                paymentMethod: 'paypal'
+                paymentMethod: 'paypal',
+                paymentStatus: details.status || 'COMPLETED'
               });
             });
+          },
+          onCancel: function() {
+            app.showAlert('Paiement PayPal annulé', 'info');
           },
           onError: function(err) {
             console.error('Erreur PayPal:', err);
             app.showAlert('Erreur lors du paiement PayPal. Veuillez réessayer.', 'error');
+            
+            // Masquer le modal de traitement s'il est affiché
+            document.getElementById('payment-processing-modal').classList.add('hidden');
           }
         }).render('#paypal-button-container');
         
@@ -449,81 +393,7 @@
       }
     }
     
-    // Traiter le paiement Stripe
-    async function processStripePayment(socialUsername) {
-      try {
-        if (!stripeSession) {
-          throw new Error('Session Stripe non initialisée');
-        }
-        
-        // Récupérer le nom du titulaire de la carte
-        const cardholderName = document.getElementById('cardholder-name').value;
-        if (!cardholderName) {
-          app.showAlert('Veuillez saisir le nom du titulaire de la carte', 'error');
-          return;
-        }
-        
-        // Vérifier que le nom d'utilisateur est fourni
-        if (!socialUsername || socialUsername.trim() === '') {
-          app.showAlert('Veuillez fournir un nom d\'utilisateur ou un lien de profil', 'error');
-          return;
-        }
-        
-        // Vérifier que la carte a été saisie
-        const cardElement = document.getElementById('stripe-card-element');
-        if (!cardElement || cardElement.innerHTML === '') {
-          app.showAlert('Veuillez saisir les informations de votre carte', 'error');
-          return;
-        }
-        
-        // Afficher le modal de traitement
-        document.getElementById('payment-processing-modal').classList.remove('hidden');
-        document.getElementById('checkout-modal').classList.add('hidden');
-        
-        try {
-          // Simuler un délai de traitement pour la démo
-          await new Promise(resolve => setTimeout(resolve, 1500));
-          
-          // Vérifier que les informations de carte sont valides (pour la démo)
-          // En production, cette vérification serait faite par Stripe
-          const cardNumberInput = document.querySelector('.StripeElement iframe');
-          if (!cardNumberInput) {
-            throw new Error('Veuillez saisir un numéro de carte valide');
-          }
-          
-          // Traiter le paiement Stripe (version simplifiée pour la démo)
-          const result = await payment.processStripePayment(stripeSession, cardholderName);
-          
-          if (result.success) {
-            console.log('Paiement Stripe réussi:', result);
-            
-            // Traiter la commande avec Stripe uniquement si le paiement est réussi
-            processOrder(socialUsername, 'stripe', {
-              paymentId: result.paymentId,
-              cardholderName: cardholderName,
-              paymentMethod: 'stripe'
-            });
-          } else {
-            throw new Error(result.error || 'Erreur lors du paiement');
-          }
-        } catch (paymentError) {
-          console.error('Erreur lors du traitement du paiement Stripe:', paymentError);
-          
-          // Masquer le modal de traitement
-          document.getElementById('payment-processing-modal').classList.add('hidden');
-          document.getElementById('checkout-modal').classList.remove('hidden');
-          
-          // Afficher l'erreur
-          app.showAlert('Erreur lors du paiement: ' + (paymentError.message || 'Veuillez réessayer'), 'error');
-        }
-      } catch (error) {
-        console.error('Erreur lors du traitement du paiement Stripe:', error);
-        app.showAlert('Erreur lors du paiement. Veuillez réessayer.', 'error');
-        
-        // Masquer le modal de traitement
-        document.getElementById('payment-processing-modal').classList.add('hidden');
-      }
-    }
+
     
     // Traiter la commande après paiement
     async function processOrder(socialUsername, paymentMethod, paymentDetails) {
