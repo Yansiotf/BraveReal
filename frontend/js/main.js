@@ -1,7 +1,9 @@
 // main.js - Fonctions principales du site
 
 // URL de base de l'API
-const API_URL = 'http://localhost:5000/api';
+const API_URL = window.location.hostname === 'localhost' 
+  ? 'http://localhost:5000/api' 
+  : '/api';
 
 // Fonction pour afficher un message d'alerte
 function showAlert(message, type = 'info') {

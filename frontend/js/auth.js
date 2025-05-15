@@ -1,7 +1,9 @@
 // auth.js - Gestion de l'authentification
 
 // URL de base de l'API
-const API_URL = 'http://localhost:5000/api';
+const API_URL = window.location.hostname === 'localhost' 
+  ? 'http://localhost:5000/api' 
+  : '/api';
 
 // Fonction pour vérifier si l'utilisateur est connecté
 function isLoggedIn() {
