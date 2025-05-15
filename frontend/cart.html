@@ -363,13 +363,15 @@
         
         // Afficher les erreurs de carte
         const displayError = document.getElementById('stripe-card-errors');
-        stripeSession.card.addEventListener('change', function(event) {
-          if (event.error) {
-            displayError.textContent = event.error.message;
-          } else {
-            displayError.textContent = '';
-          }
-        });
+        if (stripeSession.card && displayError) {
+          stripeSession.card.addEventListener('change', function(event) {
+            if (event.error) {
+              displayError.textContent = event.error.message;
+            } else {
+              displayError.textContent = '';
+            }
+          });
+        }
       } catch (error) {
         console.error('Erreur lors de l\'initialisation du formulaire Stripe:', error);
         app.showAlert('Erreur lors de l\'initialisation du paiement. Veuillez réessayer.', 'error');
@@ -391,40 +393,26 @@
           description: 'Commande BraveSMM'
         });
         
-        // Configurer le bouton PayPal
-        paypal.Buttons({
-          createOrder: function(data, actions) {
-            return actions.order.create({
-              purchase_units: [{
-                amount: {
-                  value: totalAmount.toFixed(2)
-                }
-              }]
-            });
-          },
-          onApprove: function(data, actions) {
-            return actions.order.capture().then(function(details) {
-              // Afficher le modal de traitement
-              document.getElementById('payment-processing-modal').classList.remove('hidden');
-              document.getElementById('checkout-modal').classList.add('hidden');
-              
-              // Récupérer le nom d'utilisateur
-              const socialUsername = document.getElementById('social-username').value;
-              
-              // Traiter la commande avec PayPal
-              processOrder(socialUsername, 'paypal', {
-                paymentId: details.id,
-                payerEmail: details.payer.email_address
-              });
-            });
-          },
-          onError: function(err) {
-            console.error('Erreur PayPal:', err);
-            app.showAlert('Erreur lors du paiement PayPal. Veuillez réessayer.', 'error');
-          }
-        }).render('#paypal-button-container');
+        // Le bouton PayPal est maintenant configuré via payment.renderPayPalButton
+        // Nous n'avons pas besoin de le configurer à nouveau ici
         
         paypalButtonRendered = true;
+        
+        // Ajouter un gestionnaire d'événements pour le bouton PayPal
+        const paypalContainer = document.getElementById('paypal-button-container');
+        if (paypalContainer) {
+          paypalContainer.addEventListener('click', function() {
+            // Récupérer le nom d'utilisateur pour le traitement ultérieur
+            const socialUsername = document.getElementById('social-username').value;
+            if (!socialUsername) {
+              app.showAlert('Veuillez fournir un nom d\'utilisateur ou un lien de profil', 'error');
+              return;
+            }
+            
+            // Le traitement réel sera géré par le callback onApprove de PayPal
+            localStorage.setItem('pendingSocialUsername', socialUsername);
+          });
+        }
       } catch (error) {
         console.error('Erreur lors de l\'initialisation du bouton PayPal:', error);
         app.showAlert('Erreur lors de l\'initialisation du paiement PayPal. Veuillez réessayer.', 'error');
@@ -449,17 +437,28 @@
         document.getElementById('payment-processing-modal').classList.remove('hidden');
         document.getElementById('checkout-modal').classList.add('hidden');
         
-        // Traiter le paiement Stripe
-        const result = await payment.processStripePayment(stripeSession, cardholderName);
-        
-        if (result.success) {
-          // Traiter la commande avec Stripe
-          processOrder(socialUsername, 'stripe', {
-            paymentId: result.paymentId,
-            cardholderName: cardholderName
-          });
-        } else {
-          throw new Error(result.error || 'Erreur lors du paiement');
+        try {
+          // Traiter le paiement Stripe (version simplifiée pour la démo)
+          const result = await payment.processStripePayment(stripeSession, cardholderName);
+          
+          if (result.success) {
+            // Traiter la commande avec Stripe
+            processOrder(socialUsername, 'stripe', {
+              paymentId: result.paymentId,
+              cardholderName: cardholderName
+            });
+          } else {
+            throw new Error(result.error || 'Erreur lors du paiement');
+          }
+        } catch (paymentError) {
+          console.error('Erreur lors du traitement du paiement Stripe:', paymentError);
+          
+          // Masquer le modal de traitement
+          document.getElementById('payment-processing-modal').classList.add('hidden');
+          document.getElementById('checkout-modal').classList.remove('hidden');
+          
+          // Afficher l'erreur
+          app.showAlert('Erreur lors du paiement: ' + (paymentError.message || 'Veuillez réessayer'), 'error');
         }
       } catch (error) {
         console.error('Erreur lors du traitement du paiement Stripe:', error);
@@ -502,6 +501,30 @@
         // Masquer le modal de traitement
         document.getElementById('payment-processing-modal').classList.add('hidden');
       }
+    }
+    
+    // Fonction pour gérer les erreurs de paiement
+    function handlePaymentError(error, paymentMethod) {
+      console.error(`Erreur lors du paiement ${paymentMethod}:`, error);
+      
+      // Masquer le modal de traitement
+      document.getElementById('payment-processing-modal').classList.add('hidden');
+      
+      // Afficher le modal de paiement
+      document.getElementById('checkout-modal').classList.remove('hidden');
+      
+      // Afficher un message d'erreur
+      let errorMessage = 'Une erreur est survenue lors du paiement. Veuillez réessayer.';
+      
+      if (error && error.message) {
+        if (error.message.includes('intent secret')) {
+          errorMessage = 'Erreur de configuration du paiement. Veuillez réessayer ultérieurement.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      app.showAlert(errorMessage, 'error');
     }
   </script>
 </body>

@@ -20,8 +20,8 @@ auth.isLoggedIn = function() {
 auth.isAdmin = function() {
   const userInfo = auth.getUserInfo();
   
-  // Pour la démo, nous considérons que l'utilisateur avec l'email admin@example.com est admin
-  if (userInfo && userInfo.email === 'admin@example.com') {
+  // Seul l'utilisateur avec cet email spécifique est admin
+  if (userInfo && userInfo.email === 'yns212erie@gmail.com') {
     return true;
   }
   

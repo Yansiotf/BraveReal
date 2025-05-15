@@ -117,5 +117,219 @@
 
   <!-- Scripts -->
   <script src="js/unified.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Vérifier si l'utilisateur est connecté
+      if (!auth.isLoggedIn()) {
+        window.location.href = 'login.html?redirect=orders.html';
+        return;
+      }
+      
+      // Récupérer l'ID de commande depuis l'URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const orderId = urlParams.get('id');
+      
+      if (!orderId) {
+        window.location.href = 'orders.html';
+        return;
+      }
+      
+      // Charger les détails de la commande
+      loadOrderDetails(orderId);
+      
+      // Configurer le menu utilisateur
+      auth.setupUserMenu();
+      
+      // Configurer le menu mobile
+      auth.setupMobileMenu();
+      
+      // Mettre à jour le compteur du panier
+      app.updateCartCount();
+    });
+    
+    // Fonction pour charger les détails de la commande
+    async function loadOrderDetails(orderId) {
+      try {
+        // Récupérer les commandes depuis le localStorage
+        const orders = JSON.parse(localStorage.getItem('orders')) || [];
+        
+        // Trouver la commande correspondante
+        const order = orders.find(o => o._id === orderId);
+        
+        if (!order) {
+          document.getElementById('order-details-container').innerHTML = `
+            <div class="bg-white rounded-lg shadow-md p-6 text-center">
+              <div class="text-red-500 text-6xl mb-6">
+                <i class="fas fa-exclamation-circle"></i>
+              </div>
+              <h2 class="text-2xl font-bold mb-4">Commande introuvable</h2>
+              <p class="text-gray-600 mb-6">La commande que vous recherchez n'existe pas ou a été supprimée.</p>
+              <a href="orders.html" class="btn-primary">Retour à mes commandes</a>
+            </div>
+          `;
+          return;
+        }
+        
+        // Formater les dates
+        const orderDate = new Date(order.createdAt).toLocaleDateString('fr-FR', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        
+        let paidDate = 'Non payé';
+        if (order.isPaid && order.paidAt) {
+          paidDate = new Date(order.paidAt).toLocaleDateString('fr-FR', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+        }
+        
+        // Déterminer la classe de statut
+        let statusClass = '';
+        let statusIcon = '';
+        
+        switch (order.status.toLowerCase()) {
+          case 'en attente':
+            statusClass = 'bg-yellow-100 text-yellow-800';
+            statusIcon = '<i class="fas fa-clock mr-2"></i>';
+            break;
+          case 'en cours':
+            statusClass = 'bg-blue-100 text-blue-800';
+            statusIcon = '<i class="fas fa-cog mr-2"></i>';
+            break;
+          case 'terminée':
+            statusClass = 'bg-green-100 text-green-800';
+            statusIcon = '<i class="fas fa-check mr-2"></i>';
+            break;
+          case 'annulée':
+            statusClass = 'bg-red-100 text-red-800';
+            statusIcon = '<i class="fas fa-ban mr-2"></i>';
+            break;
+          default:
+            statusClass = 'bg-gray-100 text-gray-800';
+            statusIcon = '<i class="fas fa-info-circle mr-2"></i>';
+        }
+        
+        // Générer les informations de paiement
+        let paymentInfo = '<p class="text-red-600"><i class="fas fa-times-circle mr-1"></i> Non payé</p>';
+        
+        if (order.isPaid && order.paymentInfo) {
+          const paymentMethod = order.paymentInfo.method === 'stripe' ? 'Carte bancaire' : 'PayPal';
+          const paymentIcon = order.paymentInfo.method === 'stripe' 
+            ? '<i class="fas fa-credit-card mr-1"></i>' 
+            : '<i class="fab fa-paypal mr-1"></i>';
+          
+          paymentInfo = `
+            <p class="text-green-600 mb-2"><i class="fas fa-check-circle mr-1"></i> Payé le ${paidDate}</p>
+            <p class="mb-1"><span class="font-medium">Méthode:</span> ${paymentIcon} ${paymentMethod}</p>
+            <p class="mb-1"><span class="font-medium">ID Transaction:</span> ${order.paymentInfo.id}</p>
+            <p><span class="font-medium">Montant:</span> ${order.paymentInfo.amount.toFixed(2)} ${order.paymentInfo.currency}</p>
+          `;
+        }
+        
+        // Générer le HTML des détails de la commande
+        document.getElementById('order-details-container').innerHTML = `
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+              <div>
+                <h2 class="text-2xl font-bold">Commande #${order._id.substring(order._id.length - 8)}</h2>
+                <p class="text-gray-600">Passée le ${orderDate}</p>
+              </div>
+              <div class="mt-4 md:mt-0">
+                <span class="px-4 py-2 rounded-full text-sm font-medium ${statusClass}">
+                  ${statusIcon} ${order.status}
+                </span>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div>
+                <h3 class="text-lg font-bold mb-2">Informations de livraison</h3>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                  <p><span class="font-medium">Profil:</span> ${order.socialMediaUsername}</p>
+                </div>
+              </div>
+              
+              <div>
+                <h3 class="text-lg font-bold mb-2">Paiement</h3>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                  ${paymentInfo}
+                </div>
+              </div>
+            </div>
+            
+            <h3 class="text-lg font-bold mb-2">Articles commandés</h3>
+            <div class="bg-gray-50 p-4 rounded-lg mb-6">
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                  <thead>
+                    <tr>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produit</th>
+                      <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Quantité</th>
+                      <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Prix</th>
+                      <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-200">
+                    ${order.orderItems.map(item => `
+                      <tr>
+                        <td class="px-4 py-3">
+                          <div class="font-medium">${item.name}</div>
+                          <div class="text-sm text-gray-500">${item.description ? item.description.substring(0, 50) + '...' : ''}</div>
+                        </td>
+                        <td class="px-4 py-3 text-center">${item.qty}</td>
+                        <td class="px-4 py-3 text-right">${item.price.toFixed(2)} €</td>
+                        <td class="px-4 py-3 text-right font-medium">${(item.price * item.qty).toFixed(2)} €</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                  <tfoot>
+                    <tr class="font-bold">
+                      <td class="px-4 py-3" colspan="3">Total</td>
+                      <td class="px-4 py-3 text-right">${order.totalPrice.toFixed(2)} €</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+            
+            <div class="flex justify-between">
+              <a href="orders.html" class="btn-secondary">
+                <i class="fas fa-arrow-left mr-2"></i> Retour à mes commandes
+              </a>
+              <a href="contact.html" class="btn-primary">
+                <i class="fas fa-question-circle mr-2"></i> Besoin d'aide ?
+              </a>
+            </div>
+          </div>
+        `;
+        
+        // Masquer le loader
+        document.getElementById('order-loading').classList.add('hidden');
+      } catch (error) {
+        console.error('Erreur lors du chargement des détails de la commande:', error);
+        
+        document.getElementById('order-details-container').innerHTML = `
+          <div class="bg-white rounded-lg shadow-md p-6 text-center">
+            <div class="text-red-500 text-6xl mb-6">
+              <i class="fas fa-exclamation-circle"></i>
+            </div>
+            <h2 class="text-2xl font-bold mb-4">Erreur</h2>
+            <p class="text-gray-600 mb-6">Une erreur est survenue lors du chargement des détails de la commande.</p>
+            <a href="orders.html" class="btn-primary">Retour à mes commandes</a>
+          </div>
+        `;
+        
+        // Masquer le loader
+        document.getElementById('order-loading').classList.add('hidden');
+      }
+    }
+  </script>
 </body>
 </html>
