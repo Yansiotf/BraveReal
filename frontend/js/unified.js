@@ -241,13 +241,21 @@ app.loadFeaturedProducts = async function() {
     
     featuredProducts.forEach(product => {
       const productCard = document.createElement('div');
-      productCard.className = 'bg-white rounded-lg shadow-md overflow-hidden product-card';
+      productCard.className = 'product-card slide-in-up';
+      
+      // Générer une image aléatoire si le produit n'en a pas
+      const imageUrl = product.image || `https://source.unsplash.com/300x200/?social-media,${encodeURIComponent(product.name)}`;
+      
       productCard.innerHTML = `
-        <div class="p-4">
-          <h3 class="text-lg font-bold mb-2">${product.name}</h3>
-          <p class="text-gray-600 text-sm mb-4">${product.description.substring(0, 100)}${product.description.length > 100 ? '...' : ''}</p>
+        <div class="product-badge">${Math.floor(Math.random() * 50) + 50}% de croissance</div>
+        <div class="product-image">
+          <img src="${imageUrl}" alt="${product.name}" class="w-full">
+        </div>
+        <div class="product-content">
+          <h3 class="product-title">${product.name}</h3>
+          <p class="product-description">${product.description.substring(0, 100)}${product.description.length > 100 ? '...' : ''}</p>
           <div class="flex justify-between items-center">
-            <span class="text-blue-600 font-bold">${product.price.toFixed(2)} €</span>
+            <span class="product-price">${product.price.toFixed(2)} €</span>
             <button class="btn-primary add-to-cart" data-id="${product._id}">
               <i class="fas fa-cart-plus mr-1"></i> Ajouter
             </button>
