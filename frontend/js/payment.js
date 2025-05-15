@@ -6,12 +6,32 @@ const payment = {};
 payment.config = {
   stripe: {
     publicKey: 'pk_test_TYooMQauvdEDq54NiTphI7jx',  // Clé de test Stripe
-    currency: 'eur'
+    currency: 'eur',
+    merchantEmail: 'yns212erie@gmail.com'  // Email du marchand pour recevoir les notifications
   },
   paypal: {
     clientId: 'sb',  // Clé de test PayPal (sandbox)
-    currency: 'EUR'
+    currency: 'EUR',
+    merchantEmail: 'yns212erie@gmail.com'  // Email PayPal du marchand pour recevoir les paiements
   }
+};
+
+// Instructions de configuration pour la production
+payment.configInstructions = {
+  stripe: `
+    Pour configurer Stripe en production:
+    1. Créez un compte sur stripe.com
+    2. Obtenez votre clé API publique dans le tableau de bord Stripe
+    3. Remplacez la clé de test par votre clé réelle dans payment.config.stripe.publicKey
+    4. Configurez un webhook pour recevoir les notifications de paiement
+  `,
+  paypal: `
+    Pour configurer PayPal en production:
+    1. Créez un compte développeur sur developer.paypal.com
+    2. Créez une application pour obtenir votre Client ID
+    3. Remplacez la clé de test 'sb' par votre Client ID réel dans payment.config.paypal.clientId
+    4. Assurez-vous que l'email marchand est correctement configuré
+  `
 };
 
 // Variable pour suivre si Stripe est déjà initialisé

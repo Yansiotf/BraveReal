@@ -250,7 +250,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       // Vérifier si l'utilisateur est connecté et est admin
       if (!auth.isLoggedIn() || !auth.isAdmin()) {
-        window.location.href = '../login.html?redirect=admin/orders.html';
+        window.location.href = '../login.html';
         return;
       }
       
@@ -268,6 +268,9 @@
       
       // Configurer les filtres
       setupFilters();
+      
+      // Configurer les liens de navigation admin
+      setupAdminNavigation();
       
       // Configurer la pagination
       setupPagination();
@@ -349,6 +352,22 @@
       // Réinitialiser la pagination
       currentPage = 1;
       updatePagination();
+    }
+    
+    // Configurer les liens de navigation admin
+    function setupAdminNavigation() {
+      // Corriger les liens de navigation
+      const navLinks = document.querySelectorAll('nav a');
+      navLinks.forEach(link => {
+        // S'assurer que les liens fonctionnent correctement
+        link.addEventListener('click', function(e) {
+          const href = this.getAttribute('href');
+          if (href && href !== '#' && !href.startsWith('http')) {
+            e.preventDefault();
+            window.location.href = href;
+          }
+        });
+      });
     }
     
     // Configurer la pagination

@@ -117,16 +117,16 @@ auth.setupUserMenu = function() {
     loggedOutMenu.classList.add('hidden');
     loggedInMenu.classList.remove('hidden');
     
-    // Afficher le menu admin si l'utilisateur est admin
-    if (auth.isAdmin()) {
-      adminMenu.classList.remove('hidden');
-    } else {
+    // Toujours cacher le menu admin (accès direct par URL uniquement)
+    if (adminMenu) {
       adminMenu.classList.add('hidden');
     }
   } else {
     loggedOutMenu.classList.remove('hidden');
     loggedInMenu.classList.add('hidden');
-    adminMenu.classList.add('hidden');
+    if (adminMenu) {
+      adminMenu.classList.add('hidden');
+    }
   }
   
   // Ajouter un événement au bouton de déconnexion

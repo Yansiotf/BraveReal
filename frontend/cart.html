@@ -469,19 +469,39 @@
           return;
         }
         
+        // Vérifier que la carte a été saisie
+        const cardElement = document.getElementById('stripe-card-element');
+        if (!cardElement || cardElement.innerHTML === '') {
+          app.showAlert('Veuillez saisir les informations de votre carte', 'error');
+          return;
+        }
+        
         // Afficher le modal de traitement
         document.getElementById('payment-processing-modal').classList.remove('hidden');
         document.getElementById('checkout-modal').classList.add('hidden');
         
         try {
+          // Simuler un délai de traitement pour la démo
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          
+          // Vérifier que les informations de carte sont valides (pour la démo)
+          // En production, cette vérification serait faite par Stripe
+          const cardNumberInput = document.querySelector('.StripeElement iframe');
+          if (!cardNumberInput) {
+            throw new Error('Veuillez saisir un numéro de carte valide');
+          }
+          
           // Traiter le paiement Stripe (version simplifiée pour la démo)
           const result = await payment.processStripePayment(stripeSession, cardholderName);
           
           if (result.success) {
+            console.log('Paiement Stripe réussi:', result);
+            
             // Traiter la commande avec Stripe uniquement si le paiement est réussi
             processOrder(socialUsername, 'stripe', {
               paymentId: result.paymentId,
-              cardholderName: cardholderName
+              cardholderName: cardholderName,
+              paymentMethod: 'stripe'
             });
           } else {
             throw new Error(result.error || 'Erreur lors du paiement');
