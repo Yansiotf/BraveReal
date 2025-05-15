@@ -102,12 +102,12 @@ function setupUserMenu() {
   const logoutButton = document.getElementById('logout-button');
 
   // Afficher le menu approprié en fonction de l'état de connexion
-  if (isLoggedIn()) {
+  if (auth.isLoggedIn()) {
     loggedOutMenu.classList.add('hidden');
     loggedInMenu.classList.remove('hidden');
     
     // Afficher le menu admin si l'utilisateur est admin
-    if (isAdmin()) {
+    if (auth.isAdmin()) {
       adminMenu.classList.remove('hidden');
     } else {
       adminMenu.classList.add('hidden');

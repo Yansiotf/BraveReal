@@ -195,46 +195,6 @@
   </footer>
 
   <!-- Scripts -->
-  <script src="js/auth.js"></script>
-  <script src="js/main.js"></script>
-  <script>
-    // Initialize the page
-    document.addEventListener('DOMContentLoaded', () => {
-      // Setup user menu
-      auth.setupUserMenu();
-      
-      // Setup mobile menu
-      auth.setupMobileMenu();
-      
-      // Update cart count
-      app.updateCartCount();
-      
-      // Setup contact form
-      const contactForm = document.getElementById('contact-form');
-      if (contactForm) {
-        contactForm.addEventListener('submit', function(e) {
-          e.preventDefault();
-          
-          // Simuler l'envoi du formulaire
-          const submitButton = this.querySelector('button[type="submit"]');
-          const originalText = submitButton.innerHTML;
-          
-          submitButton.disabled = true;
-          submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Envoi en cours...';
-          
-          setTimeout(() => {
-            app.showAlert('Votre message a été envoyé avec succès! Nous vous répondrons dans les plus brefs délais.', 'success');
-            
-            // Réinitialiser le formulaire
-            contactForm.reset();
-            
-            // Restaurer le bouton
-            submitButton.disabled = false;
-            submitButton.innerHTML = originalText;
-          }, 1500);
-        });
-      }
-    });
-  </script>
+  <script src="js/unified.js"></script>
 </body>
 </html>
