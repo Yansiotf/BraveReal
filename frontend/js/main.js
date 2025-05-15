@@ -1,12 +1,17 @@
 // main.js - Fonctions principales du site
 
-// URL de base de l'API
-const API_URL = window.location.hostname === 'localhost' 
-  ? 'http://localhost:5000/api' 
-  : '/api';
+// Utiliser l'API_URL définie dans auth.js ou la définir si elle n'existe pas
+if (typeof API_URL === 'undefined') {
+  var API_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:5000/api' 
+    : '/api';
+}
+
+// Créer un objet app pour exposer les fonctions
+const app = {};
 
 // Fonction pour afficher un message d'alerte
-function showAlert(message, type = 'info') {
+app.showAlert = function(message, type = 'info') {
   const alertContainer = document.getElementById('alert-container') || createAlertContainer();
   
   const alert = document.createElement('div');
@@ -54,7 +59,7 @@ function showAlert(message, type = 'info') {
 }
 
 // Fonction pour créer un conteneur d'alertes s'il n'existe pas
-function createAlertContainer() {
+const createAlertContainer = function() {
   const container = document.createElement('div');
   container.id = 'alert-container';
   container.className = 'fixed top-4 right-4 z-50 w-80 space-y-2';
@@ -74,7 +79,7 @@ style.textContent = `
 document.head.appendChild(style);
 
 // Fonction pour charger les produits en vedette sur la page d'accueil
-async function loadFeaturedProducts() {
+app.loadFeaturedProducts = async function() {
   const featuredProductsContainer = document.getElementById('featured-products');
   if (!featuredProductsContainer) return;
   
@@ -182,7 +187,7 @@ async function loadFeaturedProducts() {
 }
 
 // Fonction pour charger les catégories
-async function loadCategories() {
+app.loadCategories = async function() {
   const categoriesContainer = document.getElementById('categories-container');
   if (!categoriesContainer) return;
   
@@ -226,7 +231,7 @@ async function loadCategories() {
         
         // Filtrer les produits
         const categoryId = button.dataset.id;
-        loadProducts(categoryId);
+        app.loadProducts(categoryId);
       });
     });
   } catch (error) {
@@ -236,7 +241,7 @@ async function loadCategories() {
 }
 
 // Fonction pour charger les produits dans la page boutique
-async function loadProducts(categoryId = '') {
+app.loadProducts = async function(categoryId = '') {
   const productsContainer = document.getElementById('products-container');
   if (!productsContainer) return;
   
@@ -279,7 +284,7 @@ async function loadProducts(categoryId = '') {
       // Ajouter un événement au bouton "Ajouter au panier"
       const addToCartButton = productCard.querySelector('.add-to-cart');
       addToCartButton.addEventListener('click', () => {
-        addToCart(product);
+        app.addToCart(product);
       });
     });
   } catch (error) {
@@ -289,7 +294,7 @@ async function loadProducts(categoryId = '') {
 }
 
 // Fonction pour ajouter un produit au panier
-function addToCart(product) {
+app.addToCart = function(product) {
   const cart = JSON.parse(localStorage.getItem('cartItems')) || [];
   
   // Vérifier si le produit est déjà dans le panier
@@ -354,7 +359,7 @@ function animateCartIcon() {
 }
 
 // Fonction pour mettre à jour le compteur du panier
-function updateCartCount() {
+app.updateCartCount = function() {
   const cartCountElement = document.getElementById('cart-count');
   if (!cartCountElement) return;
   
