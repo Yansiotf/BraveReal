@@ -369,6 +369,59 @@
       try {
         // Récupérer les produits depuis le localStorage
         products = JSON.parse(localStorage.getItem('products')) || [];
+        console.log("Produits chargés:", products);
+        
+        // Si aucun produit n'existe, créer des exemples
+        if (products.length === 0) {
+          console.log("Aucun produit trouvé, création d'exemples...");
+          
+          // Récupérer les catégories
+          const categories = JSON.parse(localStorage.getItem('categories')) || [];
+          
+          // Créer des produits par défaut
+          const defaultProducts = [
+            {
+              _id: 'product_instagram_followers',
+              name: '1000 Followers Instagram',
+              categoryId: categories.find(c => c.name === 'Instagram')?._id || '',
+              description: 'Augmentez votre audience avec 1000 followers Instagram de qualité.',
+              price: 9.99,
+              stock: 999,
+              status: 'active',
+              image: 'https://images.unsplash.com/photo-1611162618071-b39a2ec055fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+              createdAt: new Date().toISOString()
+            },
+            {
+              _id: 'product_tiktok_likes',
+              name: '5000 Likes TikTok',
+              categoryId: categories.find(c => c.name === 'TikTok')?._id || '',
+              description: 'Boostez l\'engagement de vos vidéos avec 5000 likes TikTok.',
+              price: 14.99,
+              stock: 999,
+              status: 'active',
+              image: 'https://images.unsplash.com/photo-1596560548464-f010549e45d8?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+              createdAt: new Date().toISOString()
+            },
+            {
+              _id: 'product_youtube_views',
+              name: '10000 Vues YouTube',
+              categoryId: categories.find(c => c.name === 'YouTube')?._id || '',
+              description: 'Augmentez la visibilité de vos vidéos avec 10000 vues YouTube.',
+              price: 19.99,
+              stock: 999,
+              status: 'active',
+              image: 'https://images.unsplash.com/photo-1611162616475-46b635cb6868?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+              createdAt: new Date().toISOString()
+            }
+          ];
+          
+          // Ajouter les produits par défaut
+          products = defaultProducts;
+          
+          // Enregistrer dans le localStorage
+          localStorage.setItem('products', JSON.stringify(products));
+          console.log("Produits d'exemple créés et enregistrés");
+        }
         
         // Appliquer les filtres et le tri
         filterAndSortProducts();
@@ -487,10 +540,10 @@
             </div>
             <p class="text-gray-600 text-sm mb-4 line-clamp-2">${product.description || 'Aucune description'}</p>
             <div class="flex justify-end space-x-2">
-              <button class="edit-product btn-secondary btn-sm" data-id="${product._id}" onclick="openProductModal('${product._id}'); return false;">
+              <button type="button" class="edit-product btn-secondary btn-sm" data-id="${product._id}" onclick="openProductModal('${product._id}');">
                 <i class="fas fa-edit mr-1"></i> Modifier
               </button>
-              <button class="delete-product btn-danger btn-sm" data-id="${product._id}" onclick="openDeleteModal('${product._id}'); return false;">
+              <button type="button" class="delete-product btn-danger btn-sm" data-id="${product._id}" onclick="openDeleteModal('${product._id}');">
                 <i class="fas fa-trash-alt mr-1"></i> Supprimer
               </button>
             </div>
@@ -546,6 +599,7 @@
     
     // Ouvrir le modal de produit
     function openProductModal(productId = null) {
+      console.log("Ouverture du modal de produit avec ID:", productId);
       currentProductId = productId;
       
       const modalTitle = document.getElementById('modal-title');
@@ -557,6 +611,7 @@
         
         // Trouver le produit
         const product = products.find(p => p._id === productId);
+        console.log("Produit trouvé:", product);
         
         if (product) {
           // Remplir le formulaire
@@ -567,6 +622,9 @@
           document.getElementById('product-stock').value = product.stock || 999;
           document.getElementById('product-status').value = product.status || 'active';
           document.getElementById('product-image').value = product.image || '';
+        } else {
+          console.error("Produit non trouvé avec l'ID:", productId);
+          console.log("Produits disponibles:", products);
         }
       } else {
         // Mode ajout
@@ -601,6 +659,8 @@
       e.preventDefault();
       
       try {
+        console.log("Sauvegarde du produit, ID actuel:", currentProductId);
+        
         // Récupérer les valeurs du formulaire
         const name = document.getElementById('product-name').value;
         const categoryId = document.getElementById('product-category').value;
@@ -609,6 +669,8 @@
         const stock = parseInt(document.getElementById('product-stock').value);
         const status = document.getElementById('product-status').value;
         const image = document.getElementById('product-image').value;
+        
+        console.log("Données du formulaire:", { name, categoryId, description, price, stock, status, image });
         
         // Valider les données
         if (!name || isNaN(price) || price < 0) {
@@ -633,10 +695,15 @@
           
           // Trouver l'index du produit
           const productIndex = products.findIndex(p => p._id === currentProductId);
+          console.log("Index du produit à modifier:", productIndex);
           
           if (productIndex !== -1) {
             // Mettre à jour le produit
-            products[productIndex] = { ...products[productIndex], ...product };
+            const updatedProduct = { ...products[productIndex], ...product };
+            products[productIndex] = updatedProduct;
+            console.log("Produit mis à jour:", updatedProduct);
+          } else {
+            console.error("Produit non trouvé pour la mise à jour");
           }
         } else {
           // Mode ajout
@@ -645,10 +712,12 @@
           
           // Ajouter le produit
           products.push(product);
+          console.log("Nouveau produit ajouté:", product);
         }
         
         // Enregistrer les produits
         localStorage.setItem('products', JSON.stringify(products));
+        console.log("Produits enregistrés dans localStorage");
         
         // Fermer le modal
         closeProductModal();
@@ -667,6 +736,8 @@
     // Supprimer un produit
     function deleteProduct() {
       try {
+        console.log("Suppression du produit, ID:", currentProductId);
+        
         if (!currentProductId) {
           app.showAlert('Produit introuvable', 'error');
           return;
@@ -674,17 +745,24 @@
         
         // Trouver l'index du produit
         const productIndex = products.findIndex(p => p._id === currentProductId);
+        console.log("Index du produit à supprimer:", productIndex);
         
         if (productIndex === -1) {
+          console.error("Produit non trouvé pour la suppression");
           app.showAlert('Produit introuvable', 'error');
           return;
         }
         
+        // Récupérer le nom du produit pour le message
+        const productName = products[productIndex].name;
+        
         // Supprimer le produit
         products.splice(productIndex, 1);
+        console.log("Produit supprimé, nouveaux produits:", products);
         
         // Enregistrer les produits
         localStorage.setItem('products', JSON.stringify(products));
+        console.log("Produits mis à jour dans localStorage");
         
         // Fermer le modal
         closeDeleteModal();
@@ -693,7 +771,7 @@
         loadProducts();
         
         // Afficher un message de confirmation
-        app.showAlert('Produit supprimé avec succès', 'success');
+        app.showAlert(`Produit "${productName}" supprimé avec succès`, 'success');
       } catch (error) {
         console.error('Erreur lors de la suppression du produit:', error);
         app.showAlert('Erreur lors de la suppression du produit', 'error');

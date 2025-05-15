@@ -317,6 +317,47 @@
       try {
         // Récupérer les catégories depuis le localStorage
         categories = JSON.parse(localStorage.getItem('categories')) || [];
+        console.log("Catégories chargées:", categories);
+        
+        // Si aucune catégorie n'existe, créer des exemples
+        if (categories.length === 0) {
+          console.log("Aucune catégorie trouvée, création d'exemples...");
+          
+          // Créer des catégories par défaut
+          const defaultCategories = [
+            {
+              _id: 'category_instagram',
+              name: 'Instagram',
+              description: 'Followers, likes, vues et commentaires pour Instagram',
+              icon: 'fab fa-instagram',
+              image: 'https://images.unsplash.com/photo-1611162616475-46b635cb6868?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+              createdAt: new Date().toISOString()
+            },
+            {
+              _id: 'category_tiktok',
+              name: 'TikTok',
+              description: 'Followers, likes et vues pour TikTok',
+              icon: 'fab fa-tiktok',
+              image: 'https://images.unsplash.com/photo-1596560548464-f010549e45d8?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+              createdAt: new Date().toISOString()
+            },
+            {
+              _id: 'category_youtube',
+              name: 'YouTube',
+              description: 'Abonnés, vues et likes pour YouTube',
+              icon: 'fab fa-youtube',
+              image: 'https://images.unsplash.com/photo-1611162618071-b39a2ec055fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+              createdAt: new Date().toISOString()
+            }
+          ];
+          
+          // Ajouter les catégories par défaut
+          categories = defaultCategories;
+          
+          // Enregistrer dans le localStorage
+          localStorage.setItem('categories', JSON.stringify(categories));
+          console.log("Catégories d'exemple créées et enregistrées");
+        }
         
         // Filtrer les catégories
         filterCategories();
@@ -379,10 +420,10 @@
             <h3 class="font-bold text-lg mb-2">${category.name}</h3>
             <p class="text-gray-600 text-sm mb-4 line-clamp-2">${category.description || 'Aucune description'}</p>
             <div class="flex justify-end space-x-2">
-              <button class="edit-category btn-secondary btn-sm" data-id="${category._id}" onclick="openCategoryModal('${category._id}'); return false;">
+              <button type="button" class="edit-category btn-secondary btn-sm" data-id="${category._id}" onclick="openCategoryModal('${category._id}');">
                 <i class="fas fa-edit mr-1"></i> Modifier
               </button>
-              <button class="delete-category btn-danger btn-sm" data-id="${category._id}" onclick="openDeleteModal('${category._id}'); return false;">
+              <button type="button" class="delete-category btn-danger btn-sm" data-id="${category._id}" onclick="openDeleteModal('${category._id}');">
                 <i class="fas fa-trash-alt mr-1"></i> Supprimer
               </button>
             </div>
@@ -436,6 +477,7 @@
     
     // Ouvrir le modal de catégorie
     function openCategoryModal(categoryId = null) {
+      console.log("Ouverture du modal de catégorie avec ID:", categoryId);
       currentCategoryId = categoryId;
       
       const modalTitle = document.getElementById('modal-title');
@@ -447,6 +489,7 @@
         
         // Trouver la catégorie
         const category = categories.find(c => c._id === categoryId);
+        console.log("Catégorie trouvée:", category);
         
         if (category) {
           // Remplir le formulaire
@@ -454,6 +497,9 @@
           document.getElementById('category-description').value = category.description || '';
           document.getElementById('category-icon').value = category.icon || '';
           document.getElementById('category-image').value = category.image || '';
+        } else {
+          console.error("Catégorie non trouvée avec l'ID:", categoryId);
+          console.log("Catégories disponibles:", categories);
         }
       } else {
         // Mode ajout
@@ -488,11 +534,15 @@
       e.preventDefault();
       
       try {
+        console.log("Sauvegarde de la catégorie, ID actuel:", currentCategoryId);
+        
         // Récupérer les valeurs du formulaire
         const name = document.getElementById('category-name').value;
         const description = document.getElementById('category-description').value;
         const icon = document.getElementById('category-icon').value;
         const image = document.getElementById('category-image').value;
+        
+        console.log("Données du formulaire:", { name, description, icon, image });
         
         // Valider les données
         if (!name) {
@@ -514,10 +564,15 @@
           
           // Trouver l'index de la catégorie
           const categoryIndex = categories.findIndex(c => c._id === currentCategoryId);
+          console.log("Index de la catégorie à modifier:", categoryIndex);
           
           if (categoryIndex !== -1) {
             // Mettre à jour la catégorie
-            categories[categoryIndex] = { ...categories[categoryIndex], ...category };
+            const updatedCategory = { ...categories[categoryIndex], ...category };
+            categories[categoryIndex] = updatedCategory;
+            console.log("Catégorie mise à jour:", updatedCategory);
+          } else {
+            console.error("Catégorie non trouvée pour la mise à jour");
           }
         } else {
           // Mode ajout
@@ -526,10 +581,12 @@
           
           // Ajouter la catégorie
           categories.push(category);
+          console.log("Nouvelle catégorie ajoutée:", category);
         }
         
         // Enregistrer les catégories
         localStorage.setItem('categories', JSON.stringify(categories));
+        console.log("Catégories enregistrées dans localStorage");
         
         // Fermer le modal
         closeCategoryModal();
@@ -548,6 +605,8 @@
     // Supprimer une catégorie
     function deleteCategory() {
       try {
+        console.log("Suppression de la catégorie, ID:", currentCategoryId);
+        
         if (!currentCategoryId) {
           app.showAlert('Catégorie introuvable', 'error');
           return;
@@ -555,17 +614,24 @@
         
         // Trouver l'index de la catégorie
         const categoryIndex = categories.findIndex(c => c._id === currentCategoryId);
+        console.log("Index de la catégorie à supprimer:", categoryIndex);
         
         if (categoryIndex === -1) {
+          console.error("Catégorie non trouvée pour la suppression");
           app.showAlert('Catégorie introuvable', 'error');
           return;
         }
         
+        // Récupérer le nom de la catégorie pour le message
+        const categoryName = categories[categoryIndex].name;
+        
         // Supprimer la catégorie
         categories.splice(categoryIndex, 1);
+        console.log("Catégorie supprimée, nouvelles catégories:", categories);
         
         // Enregistrer les catégories
         localStorage.setItem('categories', JSON.stringify(categories));
+        console.log("Catégories mises à jour dans localStorage");
         
         // Fermer le modal
         closeDeleteModal();
@@ -574,7 +640,7 @@
         loadCategories();
         
         // Afficher un message de confirmation
-        app.showAlert('Catégorie supprimée avec succès', 'success');
+        app.showAlert(`Catégorie "${categoryName}" supprimée avec succès`, 'success');
       } catch (error) {
         console.error('Erreur lors de la suppression de la catégorie:', error);
         app.showAlert('Erreur lors de la suppression de la catégorie', 'error');
