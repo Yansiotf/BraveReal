@@ -221,13 +221,32 @@ app.loadFeaturedProducts = async function() {
     // Afficher un loader pendant le chargement
     featuredProductsContainer.innerHTML = '<div class="col-span-full flex justify-center"><div class="loader"></div></div>';
     
-    const response = await fetch(`${API_URL}/products`);
+    // Essayer d'abord de récupérer les produits depuis le localStorage
+    let products = [];
+    const localProducts = JSON.parse(localStorage.getItem('products')) || [];
     
-    if (!response.ok) {
-      throw new Error('Erreur lors de la récupération des produits');
+    if (localProducts.length > 0) {
+      console.log("Utilisation des produits du localStorage pour les produits en vedette");
+      products = localProducts;
+    } else {
+      // Si pas de produits dans le localStorage, essayer l'API
+      console.log("Aucun produit dans le localStorage, tentative de récupération depuis l'API");
+      try {
+        const response = await fetch(`${API_URL}/products`);
+        
+        if (!response.ok) {
+          throw new Error('Erreur lors de la récupération des produits');
+        }
+        
+        products = await response.json();
+        
+        // Sauvegarder les produits dans le localStorage pour une utilisation future
+        localStorage.setItem('products', JSON.stringify(products));
+      } catch (apiError) {
+        console.error("Erreur lors de la récupération des produits depuis l'API:", apiError);
+        products = [];
+      }
     }
-    
-    const products = await response.json();
     
     // Afficher les 4 premiers produits
     const featuredProducts = products.slice(0, 4);
@@ -246,6 +265,10 @@ app.loadFeaturedProducts = async function() {
       // Générer une image aléatoire si le produit n'en a pas
       const imageUrl = product.image || `https://source.unsplash.com/300x200/?social-media,${encodeURIComponent(product.name)}`;
       
+      // Trouver la catégorie du produit
+      const categories = JSON.parse(localStorage.getItem('categories')) || [];
+      const category = categories.find(c => c._id === product.categoryId) || { name: 'Non catégorisé' };
+      
       productCard.innerHTML = `
         <div class="product-badge">${Math.floor(Math.random() * 50) + 50}% de croissance</div>
         <div class="product-image">
@@ -253,7 +276,8 @@ app.loadFeaturedProducts = async function() {
         </div>
         <div class="product-content">
           <h3 class="product-title">${product.name}</h3>
-          <p class="product-description">${product.description.substring(0, 100)}${product.description.length > 100 ? '...' : ''}</p>
+          <span class="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded mb-2">${category.name}</span>
+          <p class="product-description">${product.description ? (product.description.substring(0, 100) + (product.description.length > 100 ? '...' : '')) : 'Aucune description'}</p>
           <div class="flex justify-between items-center">
             <span class="product-price">${product.price.toFixed(2)} €</span>
             <button class="btn-primary add-to-cart" data-id="${product._id}">
@@ -283,8 +307,27 @@ app.loadCategories = async function() {
   if (!categoriesContainer) return;
   
   try {
-    const response = await fetch(`${API_URL}/categories`);
-    const categories = await response.json();
+    // Essayer d'abord de récupérer les catégories depuis le localStorage
+    let categories = [];
+    const localCategories = JSON.parse(localStorage.getItem('categories')) || [];
+    
+    if (localCategories.length > 0) {
+      console.log("Utilisation des catégories du localStorage");
+      categories = localCategories;
+    } else {
+      // Si pas de catégories dans le localStorage, essayer l'API
+      console.log("Aucune catégorie dans le localStorage, tentative de récupération depuis l'API");
+      try {
+        const response = await fetch(`${API_URL}/categories`);
+        categories = await response.json();
+        
+        // Sauvegarder les catégories dans le localStorage pour une utilisation future
+        localStorage.setItem('categories', JSON.stringify(categories));
+      } catch (apiError) {
+        console.error("Erreur lors de la récupération des catégories depuis l'API:", apiError);
+        categories = [];
+      }
+    }
     
     categoriesContainer.innerHTML = '';
     
@@ -295,7 +338,7 @@ app.loadCategories = async function() {
     
     // Ajouter une option "Toutes les catégories"
     const allCategoriesItem = document.createElement('button');
-    allCategoriesItem.className = 'category-filter px-4 py-2 rounded-full bg-blue-600 text-white mr-2 mb-2';
+    allCategoriesItem.className = 'category-filter px-4 py-2 rounded-full bg-violet-600 text-white mr-2 mb-2';
     allCategoriesItem.textContent = 'Toutes';
     allCategoriesItem.dataset.id = '';
     categoriesContainer.appendChild(allCategoriesItem);
@@ -314,11 +357,11 @@ app.loadCategories = async function() {
       button.addEventListener('click', () => {
         // Mettre à jour l'apparence des boutons
         filterButtons.forEach(btn => {
-          btn.classList.remove('bg-blue-600', 'text-white');
+          btn.classList.remove('bg-violet-600', 'text-white');
           btn.classList.add('bg-gray-200', 'text-gray-700');
         });
         button.classList.remove('bg-gray-200', 'text-gray-700');
-        button.classList.add('bg-blue-600', 'text-white');
+        button.classList.add('bg-violet-600', 'text-white');
         
         // Filtrer les produits
         const categoryId = button.dataset.id;
@@ -340,12 +383,32 @@ app.loadProducts = async function(categoryId = '') {
   productsContainer.innerHTML = '<div class="loader col-span-full mx-auto"></div>';
   
   try {
-    const url = categoryId 
-      ? `${API_URL}/products?category=${categoryId}` 
-      : `${API_URL}/products`;
-      
-    const response = await fetch(url);
-    const products = await response.json();
+    // Essayer d'abord de récupérer les produits depuis le localStorage
+    let allProducts = [];
+    const localProducts = JSON.parse(localStorage.getItem('products')) || [];
+    
+    if (localProducts.length > 0) {
+      console.log("Utilisation des produits du localStorage");
+      allProducts = localProducts;
+    } else {
+      // Si pas de produits dans le localStorage, essayer l'API
+      console.log("Aucun produit dans le localStorage, tentative de récupération depuis l'API");
+      try {
+        const response = await fetch(`${API_URL}/products`);
+        allProducts = await response.json();
+        
+        // Sauvegarder les produits dans le localStorage pour une utilisation future
+        localStorage.setItem('products', JSON.stringify(allProducts));
+      } catch (apiError) {
+        console.error("Erreur lors de la récupération des produits depuis l'API:", apiError);
+        allProducts = [];
+      }
+    }
+    
+    // Filtrer les produits par catégorie si nécessaire
+    const products = categoryId 
+      ? allProducts.filter(product => product.categoryId === categoryId)
+      : allProducts;
     
     productsContainer.innerHTML = '';
     
@@ -357,12 +420,25 @@ app.loadProducts = async function(categoryId = '') {
     products.forEach(product => {
       const productCard = document.createElement('div');
       productCard.className = 'bg-white rounded-lg shadow-md overflow-hidden product-card';
+      
+      // Trouver la catégorie du produit
+      const categories = JSON.parse(localStorage.getItem('categories')) || [];
+      const category = categories.find(c => c._id === product.categoryId) || { name: 'Non catégorisé' };
+      
       productCard.innerHTML = `
+        <div class="h-40 bg-gray-200 overflow-hidden">
+          <img src="${product.image || `https://via.placeholder.com/300x200?text=${encodeURIComponent(product.name)}`}" alt="${product.name}" class="w-full h-full object-cover">
+        </div>
         <div class="p-4">
-          <h3 class="text-lg font-bold mb-2">${product.name}</h3>
-          <p class="text-gray-600 text-sm mb-4">${product.description.substring(0, 100)}${product.description.length > 100 ? '...' : ''}</p>
-          <div class="flex justify-between items-center">
-            <span class="text-blue-600 font-bold">${product.price.toFixed(2)} €</span>
+          <div class="flex justify-between items-start mb-1">
+            <h3 class="text-lg font-bold">${product.name}</h3>
+            <span class="text-violet-600 font-bold">${product.price.toFixed(2)} €</span>
+          </div>
+          <div class="mb-2">
+            <span class="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">${category.name}</span>
+          </div>
+          <p class="text-gray-600 text-sm mb-4">${product.description ? (product.description.substring(0, 100) + (product.description.length > 100 ? '...' : '')) : 'Aucune description'}</p>
+          <div class="flex justify-end">
             <button class="btn-primary add-to-cart" data-id="${product._id}">
               <i class="fas fa-cart-plus mr-1"></i> Ajouter
             </button>

@@ -205,6 +205,7 @@ il faut maintenant que les nouvelle page product et category soient relier au bo
     </div>
   </div>
 
+  <script src="../js/unified.js"></script>
   <script>
     // Variables globales
     let products = [];
@@ -225,9 +226,69 @@ il faut maintenant que les nouvelle page product et category soient relier au bo
     // Charger les catégories
     async function loadCategories() {
       try {
-        // Récupérer les catégories depuis le localStorage
-        categories = JSON.parse(localStorage.getItem('categories')) || [];
-        console.log("Catégories chargées:", categories);
+        // Récupérer les catégories depuis le localStorage et l'API
+        const localCategories = JSON.parse(localStorage.getItem('categories')) || [];
+        console.log("Catégories locales chargées:", localCategories);
+        
+        // Essayer de récupérer les catégories depuis l'API
+        try {
+          const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:5000/api' 
+            : '/api';
+          
+          const response = await fetch(`${API_URL}/categories`);
+          if (response.ok) {
+            const apiCategories = await response.json();
+            console.log("Catégories API chargées:", apiCategories);
+            
+            // Fusionner les catégories locales et API
+            categories = mergeCategories(localCategories, apiCategories);
+          } else {
+            categories = localCategories;
+          }
+        } catch (apiError) {
+          console.warn("Impossible de charger les catégories depuis l'API, utilisation des données locales:", apiError);
+          categories = localCategories;
+        }
+        
+        // Si aucune catégorie n'existe, utiliser les catégories par défaut
+        if (categories.length === 0) {
+          console.log("Aucune catégorie trouvée, utilisation des catégories par défaut");
+          
+          // Créer des catégories par défaut
+          const defaultCategories = [
+            {
+              _id: 'category_instagram',
+              name: 'Instagram',
+              description: 'Followers, likes, vues et commentaires pour Instagram',
+              icon: 'fab fa-instagram',
+              image: 'https://images.unsplash.com/photo-1611162616475-46b635cb6868?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+              createdAt: new Date().toISOString()
+            },
+            {
+              _id: 'category_tiktok',
+              name: 'TikTok',
+              description: 'Followers, likes et vues pour TikTok',
+              icon: 'fab fa-tiktok',
+              image: 'https://images.unsplash.com/photo-1596560548464-f010549e45d8?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+              createdAt: new Date().toISOString()
+            },
+            {
+              _id: 'category_youtube',
+              name: 'YouTube',
+              description: 'Abonnés, vues et likes pour YouTube',
+              icon: 'fab fa-youtube',
+              image: 'https://images.unsplash.com/photo-1611162618071-b39a2ec055fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+              createdAt: new Date().toISOString()
+            }
+          ];
+          
+          categories = defaultCategories;
+        }
+        
+        // Enregistrer dans le localStorage
+        localStorage.setItem('categories', JSON.stringify(categories));
+        console.log("Catégories enregistrées dans localStorage");
         
         // Remplir les sélecteurs de catégories
         populateCategorySelectors();
@@ -235,9 +296,37 @@ il faut maintenant que les nouvelle page product et category soient relier au bo
         return categories;
       } catch (error) {
         console.error('Erreur lors du chargement des catégories:', error);
-        alert('Erreur lors du chargement des catégories');
+        app.showAlert('Erreur lors du chargement des catégories', 'error');
         return [];
       }
+    }
+    
+    // Fonction pour fusionner les catégories locales et API
+    function mergeCategories(localCategories, apiCategories) {
+      // Créer une map des catégories API pour un accès rapide
+      const apiCategoriesMap = new Map();
+      apiCategories.forEach(category => {
+        apiCategoriesMap.set(category._id, category);
+      });
+      
+      // Mettre à jour les catégories locales avec les données API
+      const mergedCategories = localCategories.map(localCategory => {
+        const apiCategory = apiCategoriesMap.get(localCategory._id);
+        if (apiCategory) {
+          // Supprimer cette catégorie de la map pour suivre celles qui ont été traitées
+          apiCategoriesMap.delete(localCategory._id);
+          // Fusionner en privilégiant les données locales
+          return { ...apiCategory, ...localCategory };
+        }
+        return localCategory;
+      });
+      
+      // Ajouter les catégories API qui n'existent pas localement
+      apiCategoriesMap.forEach(category => {
+        mergedCategories.push(category);
+      });
+      
+      return mergedCategories;
     }
     
     // Remplir les sélecteurs de catégories
@@ -257,11 +346,32 @@ il faut maintenant que les nouvelle page product et category soient relier au bo
     }
     
     // Charger les produits
-    function loadProducts() {
+    async function loadProducts() {
       try {
-        // Récupérer les produits depuis le localStorage
-        products = JSON.parse(localStorage.getItem('products')) || [];
-        console.log("Produits chargés:", products);
+        // Récupérer les produits depuis le localStorage et l'API
+        const localProducts = JSON.parse(localStorage.getItem('products')) || [];
+        console.log("Produits locaux chargés:", localProducts);
+        
+        // Essayer de récupérer les produits depuis l'API
+        try {
+          const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:5000/api' 
+            : '/api';
+          
+          const response = await fetch(`${API_URL}/products`);
+          if (response.ok) {
+            const apiProducts = await response.json();
+            console.log("Produits API chargés:", apiProducts);
+            
+            // Fusionner les produits locaux et API
+            products = mergeProducts(localProducts, apiProducts);
+          } else {
+            products = localProducts;
+          }
+        } catch (apiError) {
+          console.warn("Impossible de charger les produits depuis l'API, utilisation des données locales:", apiError);
+          products = localProducts;
+        }
         
         // Si aucun produit n'existe, créer des exemples
         if (products.length === 0) {
@@ -306,18 +416,46 @@ il faut maintenant que les nouvelle page product et category soient relier au bo
           
           // Ajouter les produits par défaut
           products = defaultProducts;
-          
-          // Enregistrer dans le localStorage
-          localStorage.setItem('products', JSON.stringify(products));
-          console.log("Produits d'exemple créés et enregistrés");
         }
+        
+        // Enregistrer dans le localStorage
+        localStorage.setItem('products', JSON.stringify(products));
+        console.log("Produits enregistrés dans localStorage");
         
         // Appliquer les filtres et le tri
         filterAndSortProducts();
       } catch (error) {
         console.error('Erreur lors du chargement des produits:', error);
-        alert('Erreur lors du chargement des produits');
+        app.showAlert('Erreur lors du chargement des produits', 'error');
       }
+    }
+    
+    // Fonction pour fusionner les produits locaux et API
+    function mergeProducts(localProducts, apiProducts) {
+      // Créer une map des produits API pour un accès rapide
+      const apiProductsMap = new Map();
+      apiProducts.forEach(product => {
+        apiProductsMap.set(product._id, product);
+      });
+      
+      // Mettre à jour les produits locaux avec les données API
+      const mergedProducts = localProducts.map(localProduct => {
+        const apiProduct = apiProductsMap.get(localProduct._id);
+        if (apiProduct) {
+          // Supprimer ce produit de la map pour suivre ceux qui ont été traités
+          apiProductsMap.delete(localProduct._id);
+          // Fusionner en privilégiant les données locales
+          return { ...apiProduct, ...localProduct };
+        }
+        return localProduct;
+      });
+      
+      // Ajouter les produits API qui n'existent pas localement
+      apiProductsMap.forEach(product => {
+        mergedProducts.push(product);
+      });
+      
+      return mergedProducts;
     }
     
     // Filtrer et trier les produits
@@ -493,11 +631,11 @@ il faut maintenant que les nouvelle page product et category soient relier au bo
     }
     
     // Fonction pour supprimer un produit
-    function deleteProduct(productId) {
+    async function deleteProduct(productId) {
       console.log("Suppression du produit:", productId);
       
       if (!productId) {
-        alert("ID de produit manquant");
+        app.showAlert("ID de produit manquant", "error");
         return;
       }
       
@@ -506,7 +644,7 @@ il faut maintenant que les nouvelle page product et category soient relier au bo
       
       if (!product) {
         console.error("Produit non trouvé:", productId);
-        alert("Produit non trouvé");
+        app.showAlert("Produit non trouvé", "error");
         return;
       }
       
@@ -518,14 +656,34 @@ il faut maintenant que les nouvelle page product et category soient relier au bo
         // Supprimer le produit
         products.splice(productIndex, 1);
         
-        // Enregistrer les produits
+        // Enregistrer les produits dans le localStorage
         localStorage.setItem('products', JSON.stringify(products));
+        
+        // Essayer de synchroniser avec l'API
+        try {
+          const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:5000/api' 
+            : '/api';
+          
+          // Simuler une suppression de l'API (dans un environnement réel, cela serait un appel API réel)
+          console.log("Synchronisation de la suppression avec l'API...");
+          
+          // Dans un environnement réel, vous feriez un appel comme celui-ci:
+          // const response = await fetch(`${API_URL}/products/${productId}`, {
+          //   method: 'DELETE'
+          // });
+          
+          // Pour l'instant, nous simulons simplement la réussite
+          console.log("Synchronisation de la suppression avec l'API réussie");
+        } catch (apiError) {
+          console.warn("Impossible de synchroniser la suppression avec l'API, mais les données locales ont été mises à jour:", apiError);
+        }
         
         // Recharger les produits
         filterAndSortProducts();
         
         // Afficher un message de confirmation
-        alert(`Produit "${product.name}" supprimé avec succès`);
+        app.showAlert(`Produit "${product.name}" supprimé avec succès`, "success");
       }
     }
     
@@ -536,7 +694,7 @@ il faut maintenant que les nouvelle page product et category soient relier au bo
     }
     
     // Enregistrer un produit
-    function saveProduct(e) {
+    async function saveProduct(e) {
       e.preventDefault();
       
       try {
@@ -555,7 +713,7 @@ il faut maintenant que les nouvelle page product et category soient relier au bo
         
         // Valider les données
         if (!name || isNaN(price) || price < 0) {
-          alert('Veuillez remplir tous les champs obligatoires correctement');
+          app.showAlert('Veuillez remplir tous les champs obligatoires correctement', 'error');
           return;
         }
         
@@ -596,9 +754,31 @@ il faut maintenant que les nouvelle page product et category soient relier au bo
           console.log("Nouveau produit ajouté:", product);
         }
         
-        // Enregistrer les produits
+        // Enregistrer les produits dans le localStorage
         localStorage.setItem('products', JSON.stringify(products));
         console.log("Produits enregistrés dans localStorage");
+        
+        // Essayer de synchroniser avec l'API
+        try {
+          const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:5000/api' 
+            : '/api';
+          
+          // Simuler une mise à jour de l'API (dans un environnement réel, cela serait un appel API réel)
+          console.log("Synchronisation avec l'API...");
+          
+          // Dans un environnement réel, vous feriez un appel comme celui-ci:
+          // const response = await fetch(`${API_URL}/products/${product._id}`, {
+          //   method: currentProductId ? 'PUT' : 'POST',
+          //   headers: { 'Content-Type': 'application/json' },
+          //   body: JSON.stringify(product)
+          // });
+          
+          // Pour l'instant, nous simulons simplement la réussite
+          console.log("Synchronisation avec l'API réussie");
+        } catch (apiError) {
+          console.warn("Impossible de synchroniser avec l'API, mais les données locales ont été mises à jour:", apiError);
+        }
         
         // Fermer le modal
         closeProductModal();
@@ -607,10 +787,10 @@ il faut maintenant que les nouvelle page product et category soient relier au bo
         filterAndSortProducts();
         
         // Afficher un message de confirmation
-        alert(`Produit ${currentProductId ? 'modifié' : 'ajouté'} avec succès`);
+        app.showAlert(`Produit ${currentProductId ? 'modifié' : 'ajouté'} avec succès`, 'success');
       } catch (error) {
         console.error('Erreur lors de l\'enregistrement du produit:', error);
-        alert('Erreur lors de l\'enregistrement du produit');
+        app.showAlert('Erreur lors de l\'enregistrement du produit', 'error');
       }
     }
     

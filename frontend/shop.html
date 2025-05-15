@@ -7,28 +7,62 @@
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .product-card {
+      transition: all 0.3s ease;
+      border-radius: 0.5rem;
+    }
+    .product-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    .btn-primary {
+      background-color: #8b5cf6;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    .btn-primary:hover {
+      background-color: #7c3aed;
+    }
+    .loader {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #8b5cf6;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
   <!-- Header/Navigation -->
   <header class="bg-white shadow-md">
     <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
-      <a href="index.html" class="text-2xl font-bold text-blue-600">BraveSMM</a>
+      <a href="index.html" class="text-2xl font-bold text-violet-600">BraveSMM</a>
       
       <div class="hidden md:flex space-x-6">
-        <a href="index.html" class="text-gray-700 hover:text-blue-600">Accueil</a>
-        <a href="shop.html" class="text-gray-700 hover:text-blue-600 font-bold">Boutique</a>
-        <a href="about.html" class="text-gray-700 hover:text-blue-600">À propos</a>
-        <a href="contact.html" class="text-gray-700 hover:text-blue-600">Contact</a>
+        <a href="index.html" class="text-gray-700 hover:text-violet-600">Accueil</a>
+        <a href="shop.html" class="text-gray-700 hover:text-violet-600 font-bold border-b-2 border-violet-600">Boutique</a>
+        <a href="about.html" class="text-gray-700 hover:text-violet-600">À propos</a>
+        <a href="contact.html" class="text-gray-700 hover:text-violet-600">Contact</a>
       </div>
       
       <div class="flex items-center space-x-4">
-        <a href="cart.html" class="text-gray-700 hover:text-blue-600 relative">
+        <a href="cart.html" class="text-gray-700 hover:text-violet-600 relative">
           <i class="fas fa-shopping-cart"></i>
-          <span id="cart-count" class="absolute -top-2 -right-2 bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">0</span>
+          <span id="cart-count" class="absolute -top-2 -right-2 bg-violet-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">0</span>
         </a>
         
         <div id="user-menu" class="relative">
-          <button id="user-menu-button" class="text-gray-700 hover:text-blue-600">
+          <button id="user-menu-button" class="text-gray-700 hover:text-violet-600">
             <i class="fas fa-user"></i>
           </button>
           <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
